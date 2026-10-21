@@ -106,6 +106,14 @@ def apply_one(serial, action, pkg):
         code, out = adb("shell", "pm", "uninstall", "-k", "--user", "0", pkg, serial=serial)
         ok = "Success" in out
         return ok, ("removed" if ok else "not removable") if not ARGS.dry_run else out
+    if action == "disable":
+        code, out = adb("shell", "pm", "disable-user", "--user", "0", pkg, serial=serial)
+        ok = "disabled" in out.lower()
+        return ok, "disabled" if ok else "not disableable"
+    if action == "enable":
+        code, out = adb("shell", "pm", "enable", "--user", "0", pkg, serial=serial)
+        ok = "enabled" in out.lower()
+        return ok, "enabled" if ok else "not enabled"
     code, out = adb("shell", "cmd", "package", "install-existing", pkg, serial=serial)
     ok = "installed for user" in out.lower()
     return ok, ("restored" if ok else "no factory copy") if not ARGS.dry_run else out
@@ -145,7 +153,9 @@ class Handler(BaseHTTPRequestHandler):
                 return
             _, out = run(["adb", "-s", serial, "shell", "pm", "list", "packages"])
             pkgs = sorted({ln.strip()[8:] for ln in out.splitlines() if ln.startswith("package:")})
-            self.send_json({"ok": True, "count": len(pkgs), "packages": pkgs})
+            _, dout = run(["adb", "-s", serial, "shell", "pm", "list", "packages", "-d"])
+            disabled = sorted({ln.strip()[8:] for ln in dout.splitlines() if ln.startswith("package:")})
+            self.send_json({"ok": True, "count": len(pkgs), "packages": pkgs, "disabled": disabled})
             return
         if u.path == "/health":
             tok = parse_qs(u.query).get("t", [""])[0]
@@ -170,8 +180,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         action = payload.get("action")
         pkgs = payload.get("packages") or []
-        if action not in ("remove", "restore"):
-            self.send_json({"ok": False, "error": "action must be remove or restore"}, 400)
+        if action not in ("remove", "restore", "disable", "enable"):
+            self.send_json({"ok": False, "error": "action must be remove, restore, disable or enable"}, 400)
             return
         if not isinstance(pkgs, list) or not pkgs or len(pkgs) > MAX_PACKAGES:
             self.send_json({"ok": False, "error": "1..%d packages required" % MAX_PACKAGES}, 400)
@@ -186,7 +196,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not isinstance(pkg, str) or not PKG.match(pkg):
                     results.append({"pkg": str(pkg), "ok": False, "msg": "invalid package name"})
                     continue
-                if action == "remove" and pkg in DENY:
+                if action in ("remove", "disable") and pkg in DENY:
                     results.append({"pkg": pkg, "ok": False, "msg": "protected by the bridge"})
                     continue
                 ok, msg = apply_one(serial, action, pkg)
