@@ -5,88 +5,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Samsung Debloat — package picker</title>
 <style>
-  :root{
-    --bg:#0f1115; --panel:#171a21; --panel2:#1d212a; --line:#2a2f3a;
-    --fg:#e8ebf0; --muted:#9aa4b2; --accent:#4ade80; --accent2:#38bdf8;
-    --amber:#fbbf24; --red:#f87171; --radius:12px;
-  }
+  :root{--bg:#0f1115;--panel:#171a21;--panel2:#1d212a;--line:#2a2f3a;--fg:#e8ebf0;--muted:#9aa4b2;
+    --accent:#4ade80;--accent2:#38bdf8;--amber:#fbbf24;--red:#f87171;--radius:12px}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);
+  body{margin:0;background:var(--bg);color:var(--fg);
     font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif}
   a{color:var(--accent2)}
-  header{position:sticky;top:0;z-index:20;background:rgba(15,17,21,.92);
-    backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  header{position:sticky;top:0;z-index:20;background:rgba(15,17,21,.95);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
-  .head{padding:18px 0 14px}
+  .head{padding:16px 0 10px}
   h1{margin:0;font-size:20px;letter-spacing:-.02em}
   h1 span{color:var(--muted);font-weight:500}
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .chip{font-size:12px;color:var(--muted);border:1px solid var(--line);
-    background:var(--panel);padding:3px 9px;border-radius:999px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+  .chip{font-size:12px;color:var(--muted);border:1px solid var(--line);background:var(--panel);
+    padding:3px 9px;border-radius:999px;white-space:nowrap}
   .chip b{color:var(--fg);font-weight:600}
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 0 14px;
-    border-top:1px solid var(--line);margin-top:6px}
-  .search{flex:1 1 260px;min-width:220px;background:var(--panel);border:1px solid var(--line);
+  .chip.ok{color:var(--accent);border-color:rgba(74,222,128,.35)}
+  .chip.bad{color:var(--amber);border-color:rgba(251,191,36,.35)}
+  .banner{display:none;margin:10px 0 0;padding:10px 14px;border:1px solid rgba(251,191,36,.35);
+    background:rgba(251,191,36,.08);color:#fde68a;border-radius:10px;font-size:13px}
+  .banner.show{display:block}
+  .banner code{background:rgba(0,0,0,.35);padding:1px 6px;border-radius:6px;font-size:12px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 0 6px}
+  .search{flex:1 1 240px;min-width:200px;background:var(--panel);border:1px solid var(--line);
     color:var(--fg);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
   .search:focus{border-color:var(--accent2)}
-  .presets{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);
-    border-radius:10px;padding:4px;flex-wrap:wrap}
-  .presets button{background:transparent;border:0;color:var(--muted);padding:7px 12px;
-    border-radius:8px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+  .presets{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
+  .presets button{background:transparent;border:0;color:var(--muted);padding:7px 11px;border-radius:8px;
+    font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   .presets button:hover{color:var(--fg);background:var(--panel2)}
   .presets button.on{background:var(--accent);color:#06210f;font-weight:600}
-  .legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12.5px;padding:0 0 14px}
-  main{padding:8px 0 120px}
-  .group{margin-top:22px}
-  .ghead{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;
-    font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 0 12px;border-bottom:1px solid var(--line)}
+  .fchip{font-size:12.5px;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    border-radius:999px;padding:5px 11px;cursor:pointer}
+  .fchip b{color:inherit;font-weight:600;opacity:.75}
+  .fchip:hover{color:var(--fg)}
+  .fchip.on{background:var(--panel2);border-color:#3d4553;color:var(--fg)}
+  .fchip.on.t1{border-color:rgba(74,222,128,.5);color:var(--accent)}
+  .fchip.on.t2{border-color:rgba(251,191,36,.5);color:var(--amber)}
+  .fchip.on.t3{border-color:rgba(248,113,113,.5);color:var(--red)}
+  select.fsel{background:var(--panel);border:1px solid var(--line);color:var(--fg);
+    border-radius:999px;padding:6px 10px;font-size:12.5px}
+  .switch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
+  .switch input{accent-color:var(--accent);width:15px;height:15px}
+  .spacer{flex:1}
+  .mini{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:1px dashed var(--line);
+    border-radius:999px;padding:5px 11px;cursor:pointer}
+  .mini:hover{color:var(--fg);border-color:#3d4553}
+  main{padding:6px 0 130px}
+  .group{margin-top:20px}
+  .ghead{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;font-size:12px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
   .ghead span{color:var(--line)}
-  .row{display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:start;
-    padding:11px 14px;border:1px solid var(--line);border-radius:var(--radius);
-    background:var(--panel);margin-bottom:6px}
+  .row{display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:start;padding:11px 14px;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);margin-bottom:6px}
   .row:hover{border-color:#38404e}
-  .row.locked{opacity:.62}
+  .row.locked{opacity:.6}
+  .row.done{opacity:.55}
   .row input{margin:3px 0 0;width:17px;height:17px;accent-color:var(--accent);cursor:pointer}
   .row input:disabled{cursor:not-allowed}
   .name{font-weight:600;font-size:14.5px}
-  .pkg{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted);
-    word-break:break-all}
+  .pkg{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted);word-break:break-all}
   .desc{color:#c3cad6;font-size:13.5px;margin-top:3px}
-  .tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:120px}
+  .tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:130px}
   .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
   .t1{background:rgba(74,222,128,.14);color:var(--accent)}
   .t2{background:rgba(251,191,36,.14);color:var(--amber)}
   .t3{background:rgba(248,113,113,.14);color:var(--red)}
   .t0{background:rgba(154,164,178,.16);color:var(--muted)}
   .store{font-size:11px;color:var(--muted);border:1px dashed var(--line);padding:2px 7px;border-radius:999px}
-  .store.keep{color:#93c5fd;border-color:rgba(147,197,253,.35)}
+  .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;display:none}
+  .st.show{display:inline-block}
+  .st.removed{background:rgba(74,222,128,.18);color:var(--accent)}
+  .st.restored{background:rgba(56,189,248,.18);color:var(--accent2)}
+  .st.skipped{background:rgba(251,191,36,.18);color:var(--amber)}
+  .st.error{background:rgba(248,113,113,.18);color:var(--red)}
+  .st.working{background:rgba(232,235,240,.14);color:var(--fg)}
   footer{position:fixed;bottom:0;left:0;right:0;z-index:30;border-top:1px solid var(--line);
-    background:rgba(15,17,21,.95);backdrop-filter:blur(12px)}
-  .fbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 0}
+    background:rgba(15,17,21,.96);backdrop-filter:blur(12px)}
+  .fbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0 12px}
   .stat{color:var(--muted);font-size:13px}
   .stat b{color:var(--fg)}
-  .spacer{flex:1}
   .btn{font:inherit;font-size:13.5px;border-radius:10px;padding:9px 14px;cursor:pointer;
     border:1px solid var(--line);background:var(--panel);color:var(--fg)}
   .btn:hover{background:var(--panel2)}
   .btn.primary{background:var(--accent);border-color:var(--accent);color:#06210f;font-weight:700}
   .btn.primary:hover{filter:brightness(1.06)}
-  .btn:disabled{opacity:.45;cursor:not-allowed}
-  dialog{border:1px solid var(--line);background:var(--bg);color:var(--fg);
-    border-radius:16px;padding:0;width:min(880px,94vw);max-height:86vh}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .progress{height:3px;background:transparent}
+  .progress i{display:block;height:3px;width:0;background:var(--accent);transition:width .2s}
+  dialog{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;
+    padding:0;width:min(820px,94vw);max-height:86vh}
   dialog::backdrop{background:rgba(0,0,0,.66)}
   .dhead{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
   .dhead h2{margin:0;font-size:16px;flex:1}
+  .dbody{padding:16px 18px;font-size:14px}
+  .dbody ul{margin:8px 0 0;padding-left:20px;color:var(--muted);font-size:13px}
+  .dbody li{margin:3px 0}
+  .dbar{display:flex;gap:8px;padding:0 18px 18px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
   .tabs{display:flex;gap:6px;padding:12px 18px 0}
-  .tabs button{background:transparent;border:1px solid transparent;color:var(--muted);
-    padding:7px 11px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer}
+  .tabs button{background:transparent;border:1px solid transparent;color:var(--muted);padding:7px 11px;
+    border-radius:9px;font:inherit;font-size:13px;cursor:pointer}
   .tabs button.on{background:var(--panel);border-color:var(--line);color:var(--fg)}
-  pre{margin:12px 18px;padding:14px;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;max-height:44vh;overflow:auto;font-size:12px;line-height:1.55;
+  pre{margin:12px 18px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    max-height:42vh;overflow:auto;font-size:12px;line-height:1.55;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre}
-  .dbar{display:flex;gap:8px;padding:0 18px 18px;flex-wrap:wrap;align-items:center}
-  .note{color:var(--muted);font-size:12.5px}
-  .hint{color:var(--muted);font-size:12.5px;margin:10px 0 0}
+  .warn{color:var(--amber)}
+  .toast{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);background:var(--panel2);
+    border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+  .toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -95,10 +125,14 @@
     <div class="head">
       <h1>Samsung Debloat <span>— package picker</span></h1>
       <div class="meta">
-        <span class="chip"><b>SM-S911B</b> Galaxy S23</span>
+        <span class="chip" id="chipBridge">bridge: checking…</span>
+        <span class="chip" id="chipDevice"><b>SM-S911B</b> Galaxy S23</span>
         <span class="chip">Android <b>16</b> · One UI <b>8</b></span>
-        <span class="chip">offline · <b>no data</b> leaves this page</span>
-        <span class="chip"><b>159</b> removable packages</span>
+        <span class="chip"><b>159</b> packages</span>
+      </div>
+      <div class="banner" id="banner">
+        Bridge offline — this page can only export files. Start it with
+        <code>python3 web/server.py</code> and open the URL it prints.
       </div>
     </div>
     <div class="toolbar">
@@ -109,13 +143,24 @@
         <button data-level="3">Aggressive <small>145</small></button>
       </div>
     </div>
-    <div class="legend">
-      <span><b style="color:var(--accent)">■</b> Ads, telemetry, partner preloads</span>
-      <span><b style="color:var(--amber)">■</b> Features and duplicate apps</span>
-      <span><b style="color:var(--red)">■</b> Deep cuts — test after removal</span>
-      <span>🔒 never selectable</span>
-      <span><span class="store">store</span> restorable only via Play Store</span>
-      <span style="color:#93c5fd">Already excluded: Maps · Gmail · Docs · TTS · Gemini · Google Wallet · NFC · Play services</span>
+    <div class="filters">
+      <button class="fchip on" data-tier="all">All <b>159</b></button>
+      <button class="fchip t1" data-tier="1">Conservative <b>19</b></button>
+      <button class="fchip t2" data-tier="2">Balanced <b>75</b></button>
+      <button class="fchip t3" data-tier="3">Aggressive <b>145</b></button>
+      <button class="fchip" data-tier="0">Locked <b>14</b></button>
+      <select class="fsel" id="cat" aria-label="Category">
+        <option value="all">All categories</option>
+        <option value="Samsung">Samsung (114)</option>
+        <option value="Google">Google (20)</option>
+        <option value="Android">Android (19)</option>
+        <option value="Preloads">Preloads (6)</option>
+      </select>
+      <label class="switch"><input type="checkbox" id="restOnly"> restorable only</label>
+      <label class="switch"><input type="checkbox" id="showGone"> show removed</label>
+      <div class="spacer"></div>
+      <button class="mini" id="selVisible">Select visible</button>
+      <button class="mini" id="clear">Clear</button>
     </div>
   </div>
 </header>
@@ -123,185 +168,290 @@
 <main class="wrap" id="list"></main>
 
 <footer>
+  <div class="progress"><i id="prog"></i></div>
   <div class="wrap fbar">
     <div class="stat"><b id="selCount">0</b> selected</div>
-    <div class="stat"><b id="restCount">0</b> restorable with install-existing</div>
-    <div class="stat"><b id="storeCount">0</b> need Play Store reinstall</div>
-    <div class="stat" id="warn" style="color:var(--amber)"></div>
+    <div class="stat"><b id="restCount">0</b> restorable</div>
+    <div class="stat"><b id="storeCount">0</b> need Play Store</div>
+    <div class="stat" id="opStatus"></div>
     <div class="spacer"></div>
-    <button class="btn" id="clear">Clear</button>
-    <button class="btn primary" id="gen" disabled>Generate script</button>
+    <button class="btn ghost" id="undo" disabled>Undo</button>
+    <button class="btn" id="export" disabled>Export</button>
+    <button class="btn primary" id="apply" disabled>Apply to phone</button>
   </div>
 </footer>
 
+<dialog id="confirm">
+  <div class="dhead"><h2>Apply to phone</h2><button class="btn ghost" id="cCancel">Cancel</button></div>
+  <div class="dbody" id="cBody"></div>
+  <div class="dbar"><button class="btn ghost" id="cCancel2">Cancel</button><button class="btn primary" id="cGo">Remove now</button></div>
+</dialog>
+
 <dialog id="dlg">
-  <div class="dhead"><h2 id="dtitle">Generated</h2><button class="btn" id="close">Close</button></div>
+  <div class="dhead"><h2 id="dtitle">Export</h2><button class="btn ghost" id="close">Close</button></div>
   <div class="tabs">
     <button class="on" data-tab="list">list_app.txt</button>
     <button data-tab="rm">debloat.sh</button>
     <button data-tab="rv">revert.sh</button>
   </div>
   <pre id="out"></pre>
-  <div class="dbar">
-    <button class="btn" id="copy">Copy</button>
-    <button class="btn" id="download">Download</button>
-    <span class="note" id="dnote"></span>
-  </div>
+  <div class="dbar"><span class="stat" id="dnote"></span><button class="btn" id="copy">Copy</button><button class="btn" id="download">Download</button></div>
 </dialog>
 
+<div class="toast" id="toast"></div>
+
 <script>
-const DATA = [{"p":"com.samsung.android.app.camera.sticker.facearavatar.preload","l":1,"n":"Camera AR Stickers","d":"Preloaded face and AR stickers for the camera.","c":"Samsung","r":1},{"p":"com.sec.android.app.chromecustomizations","l":1,"n":"Chrome Customizations","d":"Samsung customizations layer for Chrome.","c":"Samsung","r":1},{"p":"com.samsung.android.knox.analytics.uploader","l":1,"n":"Knox Analytics","d":"Uploads Knox usage analytics.","c":"Samsung","r":1},{"p":"com.samsung.safetyinformation","l":1,"n":"Safety Information","d":"Regulatory and safety information screens.","c":"Samsung","r":1},{"p":"com.samsung.android.aircommandmanager","l":2,"n":"Air Command","d":"S Pen Air Command menu. Remove if you do not use the S Pen.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.agent","l":2,"n":"Bixby","d":"Bixby voice assistant.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.ondevice.enus","l":2,"n":"Bixby On-device English","d":"On-device Bixby English model. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.bixbyvision.framework","l":2,"n":"Bixby Vision","d":"Camera-based visual search.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.wakeup","l":2,"n":"Bixby Wakeup","d":"Always-listening \"Hi Bixby\" trigger.","c":"Samsung","r":1},{"p":"com.sec.android.sdhms","l":2,"n":"Device Health Manager","d":"Battery and device-care service (SDHMS).","c":"Samsung","r":1},{"p":"com.samsung.android.app.clipboardedge","l":2,"n":"Edge Clipboard","d":"Edge panel clipboard. Removing breaks clipboard history there.","c":"Samsung","r":1},{"p":"com.samsung.android.app.taskedge","l":2,"n":"Edge Tasks","d":"Tasks panel in the Edge panels.","c":"Samsung","r":1},{"p":"com.samsung.android.app.watchmanagerstub","l":2,"n":"Galaxy Wearable Stub","d":"Installs and links the Galaxy Wearable app for watches.","c":"Samsung","r":1},{"p":"com.samsung.android.game.gamehome","l":2,"n":"Game Launcher","d":"Game Launcher. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.game.gos","l":2,"n":"Game Optimizing Service","d":"Throttles games for thermals. Removing can raise FPS and heat.","c":"Samsung","r":1},{"p":"com.samsung.android.game.gametools","l":2,"n":"Game Tools","d":"In-game overlay (FPS, block calls).","c":"Samsung","r":1},{"p":"com.samsung.android.intellivoiceservice","l":2,"n":"Intelligent Voice Service","d":"Voice service behind Bixby and call features.","c":"Samsung","r":1},{"p":"com.samsung.android.app.interpreter","l":2,"n":"Interpreter","d":"Galaxy AI live interpreter.","c":"Samsung","r":1},{"p":"com.samsung.android.mdx.kit","l":2,"n":"MDX Kit","d":"Component of Multi Device Experience.","c":"Samsung","r":1},{"p":"com.samsung.android.allshare.service.mediashare","l":2,"n":"Media Share","d":"DLNA sharing of media to TVs.","c":"Samsung","r":1},{"p":"com.samsung.android.app.routines","l":2,"n":"Modes and Routines","d":"Context automation of settings. Removing breaks routines.","c":"Samsung","r":1},{"p":"com.samsung.android.mdx","l":2,"n":"Multi Device Experience","d":"Cross-device continuity features.","c":"Samsung","r":1},{"p":"com.samsung.android.setting.multisound","l":2,"n":"Multi Sound","d":"Play audio to two outputs at the same time.","c":"Samsung","r":1},{"p":"com.sec.android.easyonehand","l":2,"n":"One-handed Mode","d":"Shrinks the interface for one-handed use.","c":"Samsung","r":1},{"p":"com.samsung.android.service.peoplestripe","l":2,"n":"People Edge","d":"People panel in the Edge panels.","c":"Samsung","r":1},{"p":"com.sec.android.mimage.photoretouching","l":2,"n":"Photo Retouching","d":"Object eraser and retouch inside Gallery.","c":"Samsung","r":1},{"p":"com.samsung.android.app.sharelive","l":2,"n":"Quick Share","d":"Quick Share / Nearby sharing. Removing breaks file sharing.","c":"Samsung","r":1},{"p":"com.samsung.android.app.reminder","l":2,"n":"Reminder","d":"Samsung Reminder (to-dos, time reminders).","c":"Samsung","r":1},{"p":"com.samsung.android.hwresourceshare.storage","l":2,"n":"Resource Share","d":"Shares phone resources with tablets and PCs (Multi Control).","c":"Samsung","r":1},{"p":"com.samsung.android.scloud","l":2,"n":"Samsung Cloud","d":"Samsung Cloud backup and sync.","c":"Samsung","r":1},{"p":"com.samsung.android.spayfw","l":2,"n":"Samsung Pay Framework","d":"Backend for Samsung Wallet. Google Wallet does not need it.","c":"Samsung","r":1},{"p":"com.samsung.SMT","l":2,"n":"Samsung TTS","d":"Samsung text-to-speech engine. Remove if you use Google TTS.","c":"Samsung","r":1},{"p":"com.samsung.android.smartsuggestions","l":2,"n":"Smart Suggestions","d":"Suggests apps and actions on the home screen and in Settings.","c":"Samsung","r":1},{"p":"com.sec.android.easyMover","l":2,"n":"Smart Switch","d":"Smart Switch transfer app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.smartmirroring","l":2,"n":"Smart View","d":"Screen mirroring to TVs.","c":"Samsung","r":1},{"p":"com.samsung.android.oneconnect","l":2,"n":"SmartThings","d":"SmartThings hub app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.service.stplatform","l":2,"n":"SmartThings Platform","d":"Background platform for SmartThings.","c":"Samsung","r":1},{"p":"com.sec.android.app.soundalive","l":2,"n":"SoundAlive","d":"Audio effects for headphones and speakers.","c":"Samsung","r":1},{"p":"com.samsung.storyservice","l":2,"n":"Story Service","d":"Gallery auto-albums (\"stories\").","c":"Samsung","r":1},{"p":"com.samsung.android.themecenter","l":2,"n":"Theme Center","d":"Themes, icon packs and wallpapers from Galaxy Store.","c":"Samsung","r":1},{"p":"com.sec.android.app.vepreload","l":2,"n":"Video Editor","d":"Built-in video editor.","c":"Samsung","r":1},{"p":"com.samsung.app.newtrim","l":2,"n":"Video Trimmer","d":"Trims videos in Gallery.","c":"Samsung","r":1},{"p":"com.samsung.android.visionintelligence","l":2,"n":"Vision Intelligence","d":"Galaxy AI image recognition backend.","c":"Samsung","r":1},{"p":"com.samsung.android.net.wifi.wifiguider","l":2,"n":"Wi-Fi Guider","d":"Wi-Fi quality pop-ups and guidance.","c":"Samsung","r":1},{"p":"com.samsung.aasaservice","l":3,"n":"AASA Service","d":"Samsung account/auth background service. Unverified effect \u2014 test before keeping it removed.","c":"Samsung","r":1},{"p":"com.sec.automation","l":3,"n":"Automation","d":"Engine behind Routines automation.","c":"Samsung","r":1},{"p":"com.samsung.android.aware.service","l":3,"n":"Aware Service","d":"Samsung context and awareness service. Low impact.","c":"Samsung","r":1},{"p":"com.samsung.android.beaconmanager","l":3,"n":"Beacon Manager","d":"Bluetooth beacon scanning for SmartThings.","c":"Samsung","r":1},{"p":"com.samsung.android.bbc.bbcagent","l":3,"n":"Bug Report Agent","d":"Collects bug reports for Samsung Members.","c":"Samsung","r":1},{"p":"com.sec.android.app.popupcalculator","l":3,"n":"Calculator","d":"Stock calculator. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.globalpostprocmgr","l":3,"n":"Camera Post-Processing","d":"Global camera post-processing coordinator. Can affect photo quality.","c":"Samsung","r":1},{"p":"com.sec.android.app.clockpackage","l":3,"n":"Clock","d":"Alarm, timer, stopwatch and world clock. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.scpm","l":3,"n":"Config Policy Manager","d":"Remote configuration and policy manager. Check connectivity after removal.","c":"Samsung","r":1},{"p":"com.samsung.android.dbsc","l":3,"n":"DBSC","d":"Samsung data collection service. Low impact.","c":"Samsung","r":1},{"p":"com.samsung.android.da.daagent","l":3,"n":"Device Agent","d":"Samsung device agent for diagnostics and analytics.","c":"Samsung","r":1},{"p":"com.samsung.android.carkey","l":3,"n":"Digital Car Key","d":"UWB/NFC car key feature.","c":"Samsung","r":1},{"p":"com.samsung.android.dkey","l":3,"n":"Digital Key Framework","d":"Framework behind digital keys.","c":"Samsung","r":1},{"p":"com.sec.android.widgetapp.easymodecontactswidget","l":3,"n":"Easy Mode Contacts","d":"Contacts widget used only by Easy mode.","c":"Samsung","r":1},{"p":"com.samsung.android.easysetup","l":3,"n":"Easy Setup","d":"Quick setup transfer helper. Safe after setup.","c":"Samsung","r":1},{"p":"com.sec.android.emergencylauncher","l":3,"n":"Emergency Launcher","d":"Emergency mode home screen and SOS. Remove with care.","c":"Samsung","r":1},{"p":"com.samsung.faceservice","l":3,"n":"Face Service","d":"Face recognition for unlock and accounts. Keep if you use face unlock.","c":"Samsung","r":1},{"p":"com.sem.factoryapp","l":3,"n":"Factory App","d":"Factory test app.","c":"Samsung","r":1},{"p":"com.sec.android.app.factorykeystring","l":3,"n":"Factory Key String","d":"Factory test app.","c":"Samsung","r":1},{"p":"com.samsung.android.fmm","l":3,"n":"Find My Mobile","d":"Remote locate, lock and wipe. Removing loses that safety net.","c":"Samsung","r":1},{"p":"com.samsung.android.forest","l":3,"n":"Forest","d":"Unclear Samsung preload. Test before keeping it removed.","c":"Samsung","r":1},{"p":"com.samsung.android.gru","l":3,"n":"GRU","d":"Samsung background utility, function unclear. Test.","c":"Samsung","r":1},{"p":"com.sec.hearingadjust","l":3,"n":"Hearing Adjust","d":"Hearing-aid and hearing adjustment settings.","c":"Samsung","r":1},{"p":"com.samsung.ipservice","l":3,"n":"IP Service","d":"Internet and telephony helper service.","c":"Samsung","r":1},{"p":"com.samsung.android.ipsgeofence","l":3,"n":"IPS Geofence","d":"Indoor positioning geofences.","c":"Samsung","r":1},{"p":"com.samsung.android.knox.zt.framework","l":3,"n":"Knox Zero Trust","d":"Enterprise security framework. Remove only if not employer-managed.","c":"Samsung","r":1},{"p":"com.samsung.android.liveeffectservice","l":3,"n":"Live Effect","d":"Live video wallpaper effects.","c":"Samsung","r":1},{"p":"com.sec.android.app.magnifier","l":3,"n":"Magnifier","d":"Accessibility magnifier.","c":"Samsung","r":1},{"p":"com.samsung.android.mapsagent","l":3,"n":"Map Agent","d":"Background agent for Samsung map and location features.","c":"Samsung","r":1},{"p":"com.samsung.android.mdecservice","l":3,"n":"MDEC Service","d":"Media decode and render helper.","c":"Samsung","r":1},{"p":"com.samsung.android.mobileservice","l":3,"n":"Mobile Service","d":"Samsung account sync backend.","c":"Samsung","r":1},{"p":"com.sec.android.app.myfiles","l":3,"n":"My Files","d":"File manager. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.sdk.ocr","l":3,"n":"OCR SDK","d":"Text recognition SDK used by Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.android.app.parentalcare","l":3,"n":"Parental Care","d":"Parental control helper for Samsung Kids.","c":"Samsung","r":1},{"p":"com.sec.android.app.personalization","l":3,"n":"Personalization","d":"Personalization service for Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.petservice","l":3,"n":"Pet Service","d":"Pet wallpaper and lock-screen feature.","c":"Samsung","r":1},{"p":"com.sec.android.app.quicktool","l":3,"n":"Quick Tool","d":"Quick tools panel helper.","c":"Samsung","r":1},{"p":"com.sec.android.RilServiceModeApp","l":3,"n":"RIL Service Mode","d":"Radio diagnostics menu.","c":"Samsung","r":1},{"p":"com.samsung.android.authfw","l":3,"n":"Samsung Auth Framework","d":"Auth framework behind Samsung Pass and account.","c":"Samsung","r":1},{"p":"com.samsung.android.calendar","l":3,"n":"Samsung Calendar","d":"Samsung Calendar app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.email.provider","l":3,"n":"Samsung Email","d":"Samsung Email app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.kidsinstaller","l":3,"n":"Samsung Kids","d":"Installs Samsung Kids. Remove if unused.","c":"Samsung","r":1},{"p":"com.samsung.android.mdm","l":3,"n":"Samsung MDM","d":"Mobile device management client. Remove if not enrolled by an employer.","c":"Samsung","r":1},{"p":"com.samsung.android.messaging","l":3,"n":"Samsung Messages","d":"Stock SMS app. Remove only if Google Messages is your default.","c":"Samsung","r":1},{"p":"com.samsung.android.app.notes","l":3,"n":"Samsung Notes","d":"Notes app. Not restorable \u2014 needs Galaxy Store.","c":"Samsung","r":0},{"p":"com.samsung.android.samsungpass","l":3,"n":"Samsung Pass","d":"Samsung password manager and passkeys.","c":"Samsung","r":1},{"p":"com.samsung.android.samsungpassautofill","l":3,"n":"Samsung Pass Autofill","d":"Autofill provider for Samsung Pass.","c":"Samsung","r":1},{"p":"com.sec.spp.push","l":3,"n":"Samsung Push Service","d":"Push channel for Samsung apps and notifications.","c":"Samsung","r":0},{"p":"com.samsung.knox.securefolder","l":3,"n":"Secure Folder","d":"Encrypted private workspace. Remove only if you never use it.","c":"Samsung","r":1},{"p":"com.samsung.android.app.sketchbook","l":3,"n":"Sketchbook","d":"Sketching add-on for Samsung Notes / PENUP.","c":"Samsung","r":1},{"p":"com.skms.android.agent","l":3,"n":"SKMS Agent","d":"MDM/Knox management agent. Remove if not employer-managed.","c":"Samsung","r":1},{"p":"com.sec.android.easyMover.Agent","l":3,"n":"Smart Switch Agent","d":"Smart Switch background agent.","c":"Samsung","r":1},{"p":"com.samsung.android.smartswitchassistant","l":3,"n":"Smart Switch Assistant","d":"Phone-to-phone transfer helper.","c":"Samsung","r":1},{"p":"com.samsung.android.app.soundpicker","l":3,"n":"Sound Picker","d":"Picks sounds for notifications and alarms. Test alerts after removal.","c":"Samsung","r":1},{"p":"com.samsung.android.stickercenter","l":3,"n":"Sticker Center","d":"Stickers for the camera and AR.","c":"Samsung","r":1},{"p":"com.sec.sve","l":3,"n":"SVE","d":"Samsung video enhancement service. Unverified effect.","c":"Samsung","r":1},{"p":"com.samsung.android.service.tagservice","l":3,"n":"Tag Service","d":"NFC tag service framework.","c":"Samsung","r":1},{"p":"com.samsung.android.app.updatecenter","l":3,"n":"Update Center","d":"Updates preloaded Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.android.vtcamerasettings","l":3,"n":"Video Call Camera","d":"Camera settings for third-party video calls. Can break Meet or Zoom camera.","c":"Samsung","r":1},{"p":"com.sec.android.app.ve.vebgm","l":3,"n":"Video Editor Music","d":"Background music library for the video editor.","c":"Samsung","r":1},{"p":"com.samsung.android.visual.cloudcore","l":3,"n":"Visual Cloud Core","d":"Cloud processing for visual features.","c":"Samsung","r":1},{"p":"com.sec.android.app.voicenote","l":3,"n":"Voice Recorder","d":"Voice recorder app. Not restorable.","c":"Samsung","r":0},{"p":"com.sec.android.app.wlantest","l":3,"n":"WLAN Test","d":"Wi-Fi diagnostic test app.","c":"Samsung","r":1},{"p":"com.samsung.sec.android.application.csc","l":0,"n":"CSC","d":"Region and carrier configuration. Removing can break mobile data, VoLTE and OTA updates.","c":"Samsung","r":1},{"p":"com.samsung.android.ese","l":0,"n":"eSE Secure Element","d":"Embedded secure element used by Samsung Wallet and keys. Removing breaks tap-to-pay.","c":"Samsung","r":1},{"p":"com.samsung.android.app.omcagent","l":0,"n":"OMC Agent","d":"Carrier and region (CSC) configuration agent. Tied to mobile data and APN setup.","c":"Samsung","r":1},{"p":"com.sec.android.app.safetyassurance","l":0,"n":"Safety Assurance","d":"Emergency and SOS safety service.","c":"Samsung","r":1},{"p":"com.osp.app.signin","l":0,"n":"Samsung Account","d":"Samsung account sign-in. Breaks Galaxy Store, Find My, Samsung Cloud, backups.","c":"Samsung","r":0},{"p":"com.sec.android.app.billing","l":0,"n":"Samsung Billing","d":"In-app purchases for Galaxy Store. Removing breaks paid apps.","c":"Samsung","r":1},{"p":"com.sec.android.app.SecSetupWizard","l":0,"n":"Setup Wizard","d":"First-boot setup flow. Do not remove.","c":"Samsung","r":1},{"p":"com.google.mainline.telemetry","l":1,"n":"Mainline Telemetry","d":"Sends system-module usage stats to Google.","c":"Google","r":0},{"p":"com.google.android.onetimeinitializer","l":1,"n":"One-time Initializer","d":"Runs once during first boot. Safe after setup.","c":"Google","r":1},{"p":"com.google.android.printservice.recommendation","l":1,"n":"Print Recommendations","d":"Suggests print services. Safe.","c":"Google","r":1},{"p":"com.google.android.apps.aiwallpapers","l":2,"n":"AI Wallpapers","d":"Generative wallpaper feature in One UI 8.","c":"Google","r":1},{"p":"com.google.android.projection.gearhead","l":2,"n":"Android Auto","d":"In-car phone projection. Not restorable.","c":"Google","r":0},{"p":"com.android.chrome","l":2,"n":"Chrome","d":"Google Chrome. Not restorable \u2014 needs Play Store reinstall.","c":"Google","r":0},{"p":"com.google.android.apps.tachyon","l":2,"n":"Google Meet","d":"Video calls. Not restorable.","c":"Google","r":0},{"p":"com.google.android.apps.photos","l":2,"n":"Google Photos","d":"Photos app and cloud backup. Removing stops backup. Not restorable.","c":"Google","r":0},{"p":"com.google.android.apps.restore","l":2,"n":"Google Restore","d":"Restores data from an old phone during setup. Not restorable.","c":"Google","r":0},{"p":"com.google.android.healthconnect.controller","l":2,"n":"Health Connect","d":"Health data hub UI. Remove if you do not sync health apps. Installed as an APEX module \u2014 it may come back after a reboot.","c":"Google","r":1},{"p":"com.google.android.apps.books","l":2,"n":"Play Books","d":"Google Play Books reader. Not restorable.","c":"Google","r":0},{"p":"com.google.android.youtube","l":2,"n":"YouTube","d":"YouTube app.","c":"Google","r":1},{"p":"com.google.ar.core","l":3,"n":"ARCore","d":"AR engine used by AR apps and games. Not restorable.","c":"Google","r":0},{"p":"com.google.android.gms.supervision","l":3,"n":"Family Link","d":"Parental supervision component. Remove only if you do not use Family Link.","c":"Google","r":1},{"p":"com.google.audio.hearing.visualization.accessibility.scribe","l":3,"n":"Live Transcribe","d":"Accessibility transcription. Keep if needed.","c":"Google","r":1},{"p":"com.google.android.apps.accessibility.voiceaccess","l":3,"n":"Voice Access","d":"Accessibility control by voice. Keep if needed.","c":"Google","r":0},{"p":"com.google.android.googlequicksearchbox","l":0,"n":"Google App","d":"Search, Discover feed, Assistant voice trigger, Gemini entry point. Removing breaks home-screen search.","c":"Google","r":0},{"p":"com.google.android.syncadapters.calendar","l":0,"n":"Google Calendar Sync","d":"Sync adapter for Google Calendar. Removing stops Google calendars.","c":"Google","r":1},{"p":"com.google.android.partnersetup","l":0,"n":"Partner Setup","d":"Google partner configuration for region and carrier. Some apps misbehave without it.","c":"Google","r":0},{"p":"com.google.android.safetycenter.resources","l":0,"n":"Safety Center Assets","d":"Strings and assets for Android Safety Center (emergency info, SOS). Installed as an APEX module \u2014 it may come back after a reboot.","c":"Google","r":1},{"p":"com.android.bookmarkprovider","l":1,"n":"Bookmark Provider","d":"Stores stock-browser bookmarks. Safe if you never use that browser.","c":"Android / system","r":1},{"p":"com.android.wallpaper.livepicker","l":1,"n":"Live Wallpaper Picker","d":"Picker for live wallpapers. Safe with static wallpapers.","c":"Android / system","r":1},{"p":"com.android.role.notes.enabled","l":1,"n":"Notes Role Config","d":"Configuration for the system notes role.","c":"Android / system","r":1},{"p":"com.android.providers.partnerbookmarks","l":1,"n":"Partner Bookmarks","d":"Carrier bookmarks preloaded into the browser.","c":"Android / system","r":1},{"p":"com.android.dreams.basic","l":1,"n":"Screensaver","d":"Daydream screensaver, only used while docked or charging.","c":"Android / system","r":1},{"p":"com.android.internal.display.cutout.emulation.waterfall","l":1,"n":"Waterfall Cutout Emulator","d":"Developer option that fakes a waterfall display cutout.","c":"Android / system","r":1},{"p":"com.android.bips","l":2,"n":"Built-in Print","d":"Built-in printer discovery and printing. Remove only if you never print.","c":"Android / system","r":1},{"p":"com.android.apps.tag","l":2,"n":"NFC Tag","d":"AOSP reader/writer for NFC tags. Safe unless you write tags with it.","c":"Android / system","r":1},{"p":"com.android.printspooler","l":2,"n":"Print Spooler","d":"Print queue behind the print dialog.","c":"Android / system","r":1},{"p":"com.android.settings.intelligence","l":2,"n":"Settings Search","d":"Search index and suggestions inside Settings. Settings still works.","c":"Android / system","r":1},{"p":"com.android.stk","l":2,"n":"SIM Toolkit","d":"Carrier SIM menus (top-up, service codes).","c":"Android / system","r":1},{"p":"com.android.providers.userdictionary","l":2,"n":"User Dictionary","d":"Stores your custom keyboard words. Removing loses them.","c":"Android / system","r":1},{"p":"com.android.wallpapercropper","l":2,"n":"Wallpaper Cropper","d":"Crop screen for \"set wallpaper\". Removing breaks that flow.","c":"Android / system","r":1},{"p":"com.android.backupconfirm","l":3,"n":"Backup Confirm","d":"One-time dialog for adb backup. Safe to remove.","c":"Android / system","r":1},{"p":"com.monotype.android.font.foundation","l":3,"n":"Monotype Fonts","d":"Extra Monotype font pack. Removing may affect font selection.","c":"Android / system","r":1},{"p":"com.android.sharedstoragebackup","l":3,"n":"Shared Storage Backup","d":"Legacy adb-backup helper for shared storage.","c":"Android / system","r":1},{"p":"com.android.providers.calendar","l":0,"n":"Calendar Storage","d":"Stores every calendar event. Removing hides all calendars.","c":"Android / system","r":1},{"p":"com.monotype.android.font.samsungone","l":0,"n":"SamsungOne Font","d":"The system default font.","c":"Android / system","r":1},{"p":"com.touchtype.swiftkey","l":0,"n":"SwiftKey Keyboard","d":"Keyboard app. If it is your active keyboard, removing it leaves none.","c":"Android / system","r":0},{"p":"com.amazon.kindle","l":1,"n":"Kindle","d":"Preinstalled Amazon Kindle reader. Not restorable \u2014 needs Play Store reinstall.","c":"Preloads","r":0},{"p":"com.microsoft.appmanager","l":1,"n":"Link to Windows","d":"Bridge for Windows Phone Link. Remove if unused.","c":"Preloads","r":1},{"p":"com.linkedin.android","l":1,"n":"LinkedIn","d":"Preinstalled LinkedIn. Not restorable.","c":"Preloads","r":0},{"p":"com.microsoft.skydrive","l":1,"n":"OneDrive","d":"Preinstalled OneDrive.","c":"Preloads","r":1},{"p":"com.spotify.music","l":1,"n":"Spotify","d":"Preinstalled Spotify. Not restorable.","c":"Preloads","r":0},{"p":"com.tripadvisor.tripadvisor","l":1,"n":"Tripadvisor","d":"Preinstalled Tripadvisor. Not restorable.","c":"Preloads","r":0}];
+const DATA = [{"p":"com.samsung.android.app.camera.sticker.facearavatar.preload","l":1,"n":"Camera AR Stickers","d":"Preloaded face and AR stickers for the camera.","c":"Samsung","r":1},{"p":"com.sec.android.app.chromecustomizations","l":1,"n":"Chrome Customizations","d":"Samsung customizations layer for Chrome.","c":"Samsung","r":1},{"p":"com.samsung.android.knox.analytics.uploader","l":1,"n":"Knox Analytics","d":"Uploads Knox usage analytics.","c":"Samsung","r":1},{"p":"com.samsung.safetyinformation","l":1,"n":"Safety Information","d":"Regulatory and safety information screens.","c":"Samsung","r":1},{"p":"com.samsung.android.aircommandmanager","l":2,"n":"Air Command","d":"S Pen Air Command menu. Remove if you do not use the S Pen.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.agent","l":2,"n":"Bixby","d":"Bixby voice assistant.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.ondevice.enus","l":2,"n":"Bixby On-device English","d":"On-device Bixby English model. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.bixbyvision.framework","l":2,"n":"Bixby Vision","d":"Camera-based visual search.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.wakeup","l":2,"n":"Bixby Wakeup","d":"Always-listening \"Hi Bixby\" trigger.","c":"Samsung","r":1},{"p":"com.sec.android.sdhms","l":2,"n":"Device Health Manager","d":"Battery and device-care service (SDHMS).","c":"Samsung","r":1},{"p":"com.samsung.android.app.clipboardedge","l":2,"n":"Edge Clipboard","d":"Edge panel clipboard. Removing breaks clipboard history there.","c":"Samsung","r":1},{"p":"com.samsung.android.app.taskedge","l":2,"n":"Edge Tasks","d":"Tasks panel in the Edge panels.","c":"Samsung","r":1},{"p":"com.samsung.android.app.watchmanagerstub","l":2,"n":"Galaxy Wearable Stub","d":"Installs and links the Galaxy Wearable app for watches.","c":"Samsung","r":1},{"p":"com.samsung.android.game.gamehome","l":2,"n":"Game Launcher","d":"Game Launcher. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.game.gos","l":2,"n":"Game Optimizing Service","d":"Throttles games for thermals. Removing can raise FPS and heat.","c":"Samsung","r":1},{"p":"com.samsung.android.game.gametools","l":2,"n":"Game Tools","d":"In-game overlay (FPS, block calls).","c":"Samsung","r":1},{"p":"com.samsung.android.intellivoiceservice","l":2,"n":"Intelligent Voice Service","d":"Voice service behind Bixby and call features.","c":"Samsung","r":1},{"p":"com.samsung.android.app.interpreter","l":2,"n":"Interpreter","d":"Galaxy AI live interpreter.","c":"Samsung","r":1},{"p":"com.samsung.android.mdx.kit","l":2,"n":"MDX Kit","d":"Component of Multi Device Experience.","c":"Samsung","r":1},{"p":"com.samsung.android.allshare.service.mediashare","l":2,"n":"Media Share","d":"DLNA sharing of media to TVs.","c":"Samsung","r":1},{"p":"com.samsung.android.app.routines","l":2,"n":"Modes and Routines","d":"Context automation of settings. Removing breaks routines.","c":"Samsung","r":1},{"p":"com.samsung.android.mdx","l":2,"n":"Multi Device Experience","d":"Cross-device continuity features.","c":"Samsung","r":1},{"p":"com.samsung.android.setting.multisound","l":2,"n":"Multi Sound","d":"Play audio to two outputs at the same time.","c":"Samsung","r":1},{"p":"com.sec.android.easyonehand","l":2,"n":"One-handed Mode","d":"Shrinks the interface for one-handed use.","c":"Samsung","r":1},{"p":"com.samsung.android.service.peoplestripe","l":2,"n":"People Edge","d":"People panel in the Edge panels.","c":"Samsung","r":1},{"p":"com.sec.android.mimage.photoretouching","l":2,"n":"Photo Retouching","d":"Object eraser and retouch inside Gallery.","c":"Samsung","r":1},{"p":"com.samsung.android.app.sharelive","l":2,"n":"Quick Share","d":"Quick Share / Nearby sharing. Removing breaks file sharing.","c":"Samsung","r":1},{"p":"com.samsung.android.app.reminder","l":2,"n":"Reminder","d":"Samsung Reminder (to-dos, time reminders).","c":"Samsung","r":1},{"p":"com.samsung.android.hwresourceshare.storage","l":2,"n":"Resource Share","d":"Shares phone resources with tablets and PCs (Multi Control).","c":"Samsung","r":1},{"p":"com.samsung.android.scloud","l":2,"n":"Samsung Cloud","d":"Samsung Cloud backup and sync.","c":"Samsung","r":1},{"p":"com.samsung.android.spayfw","l":2,"n":"Samsung Pay Framework","d":"Backend for Samsung Wallet. Google Wallet does not need it.","c":"Samsung","r":1},{"p":"com.samsung.SMT","l":2,"n":"Samsung TTS","d":"Samsung text-to-speech engine. Remove if you use Google TTS.","c":"Samsung","r":1},{"p":"com.samsung.android.smartsuggestions","l":2,"n":"Smart Suggestions","d":"Suggests apps and actions on the home screen and in Settings.","c":"Samsung","r":1},{"p":"com.sec.android.easyMover","l":2,"n":"Smart Switch","d":"Smart Switch transfer app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.smartmirroring","l":2,"n":"Smart View","d":"Screen mirroring to TVs.","c":"Samsung","r":1},{"p":"com.samsung.android.oneconnect","l":2,"n":"SmartThings","d":"SmartThings hub app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.service.stplatform","l":2,"n":"SmartThings Platform","d":"Background platform for SmartThings.","c":"Samsung","r":1},{"p":"com.sec.android.app.soundalive","l":2,"n":"SoundAlive","d":"Audio effects for headphones and speakers.","c":"Samsung","r":1},{"p":"com.samsung.storyservice","l":2,"n":"Story Service","d":"Gallery auto-albums (\"stories\").","c":"Samsung","r":1},{"p":"com.samsung.android.themecenter","l":2,"n":"Theme Center","d":"Themes, icon packs and wallpapers from Galaxy Store.","c":"Samsung","r":1},{"p":"com.sec.android.app.vepreload","l":2,"n":"Video Editor","d":"Built-in video editor.","c":"Samsung","r":1},{"p":"com.samsung.app.newtrim","l":2,"n":"Video Trimmer","d":"Trims videos in Gallery.","c":"Samsung","r":1},{"p":"com.samsung.android.visionintelligence","l":2,"n":"Vision Intelligence","d":"Galaxy AI image recognition backend.","c":"Samsung","r":1},{"p":"com.samsung.android.net.wifi.wifiguider","l":2,"n":"Wi-Fi Guider","d":"Wi-Fi quality pop-ups and guidance.","c":"Samsung","r":1},{"p":"com.samsung.aasaservice","l":3,"n":"AASA Service","d":"Samsung account/auth background service. Unverified effect \u2014 test before keeping it removed.","c":"Samsung","r":1},{"p":"com.sec.automation","l":3,"n":"Automation","d":"Engine behind Routines automation.","c":"Samsung","r":1},{"p":"com.samsung.android.aware.service","l":3,"n":"Aware Service","d":"Samsung context and awareness service. Low impact.","c":"Samsung","r":1},{"p":"com.samsung.android.beaconmanager","l":3,"n":"Beacon Manager","d":"Bluetooth beacon scanning for SmartThings.","c":"Samsung","r":1},{"p":"com.samsung.android.bbc.bbcagent","l":3,"n":"Bug Report Agent","d":"Collects bug reports for Samsung Members.","c":"Samsung","r":1},{"p":"com.sec.android.app.popupcalculator","l":3,"n":"Calculator","d":"Stock calculator. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.globalpostprocmgr","l":3,"n":"Camera Post-Processing","d":"Global camera post-processing coordinator. Can affect photo quality.","c":"Samsung","r":1},{"p":"com.sec.android.app.clockpackage","l":3,"n":"Clock","d":"Alarm, timer, stopwatch and world clock. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.scpm","l":3,"n":"Config Policy Manager","d":"Remote configuration and policy manager. Check connectivity after removal.","c":"Samsung","r":1},{"p":"com.samsung.android.dbsc","l":3,"n":"DBSC","d":"Samsung data collection service. Low impact.","c":"Samsung","r":1},{"p":"com.samsung.android.da.daagent","l":3,"n":"Device Agent","d":"Samsung device agent for diagnostics and analytics.","c":"Samsung","r":1},{"p":"com.samsung.android.carkey","l":3,"n":"Digital Car Key","d":"UWB/NFC car key feature.","c":"Samsung","r":1},{"p":"com.samsung.android.dkey","l":3,"n":"Digital Key Framework","d":"Framework behind digital keys.","c":"Samsung","r":1},{"p":"com.sec.android.widgetapp.easymodecontactswidget","l":3,"n":"Easy Mode Contacts","d":"Contacts widget used only by Easy mode.","c":"Samsung","r":1},{"p":"com.samsung.android.easysetup","l":3,"n":"Easy Setup","d":"Quick setup transfer helper. Safe after setup.","c":"Samsung","r":1},{"p":"com.sec.android.emergencylauncher","l":3,"n":"Emergency Launcher","d":"Emergency mode home screen and SOS. Remove with care.","c":"Samsung","r":1},{"p":"com.samsung.faceservice","l":3,"n":"Face Service","d":"Face recognition for unlock and accounts. Keep if you use face unlock.","c":"Samsung","r":1},{"p":"com.sem.factoryapp","l":3,"n":"Factory App","d":"Factory test app.","c":"Samsung","r":1},{"p":"com.sec.android.app.factorykeystring","l":3,"n":"Factory Key String","d":"Factory test app.","c":"Samsung","r":1},{"p":"com.samsung.android.fmm","l":3,"n":"Find My Mobile","d":"Remote locate, lock and wipe. Removing loses that safety net.","c":"Samsung","r":1},{"p":"com.samsung.android.forest","l":3,"n":"Forest","d":"Unclear Samsung preload. Test before keeping it removed.","c":"Samsung","r":1},{"p":"com.samsung.android.gru","l":3,"n":"GRU","d":"Samsung background utility, function unclear. Test.","c":"Samsung","r":1},{"p":"com.sec.hearingadjust","l":3,"n":"Hearing Adjust","d":"Hearing-aid and hearing adjustment settings.","c":"Samsung","r":1},{"p":"com.samsung.ipservice","l":3,"n":"IP Service","d":"Internet and telephony helper service.","c":"Samsung","r":1},{"p":"com.samsung.android.ipsgeofence","l":3,"n":"IPS Geofence","d":"Indoor positioning geofences.","c":"Samsung","r":1},{"p":"com.samsung.android.knox.zt.framework","l":3,"n":"Knox Zero Trust","d":"Enterprise security framework. Remove only if not employer-managed.","c":"Samsung","r":1},{"p":"com.samsung.android.liveeffectservice","l":3,"n":"Live Effect","d":"Live video wallpaper effects.","c":"Samsung","r":1},{"p":"com.sec.android.app.magnifier","l":3,"n":"Magnifier","d":"Accessibility magnifier.","c":"Samsung","r":1},{"p":"com.samsung.android.mapsagent","l":3,"n":"Map Agent","d":"Background agent for Samsung map and location features.","c":"Samsung","r":1},{"p":"com.samsung.android.mdecservice","l":3,"n":"MDEC Service","d":"Media decode and render helper.","c":"Samsung","r":1},{"p":"com.samsung.android.mobileservice","l":3,"n":"Mobile Service","d":"Samsung account sync backend.","c":"Samsung","r":1},{"p":"com.sec.android.app.myfiles","l":3,"n":"My Files","d":"File manager. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.sdk.ocr","l":3,"n":"OCR SDK","d":"Text recognition SDK used by Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.android.app.parentalcare","l":3,"n":"Parental Care","d":"Parental control helper for Samsung Kids.","c":"Samsung","r":1},{"p":"com.sec.android.app.personalization","l":3,"n":"Personalization","d":"Personalization service for Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.petservice","l":3,"n":"Pet Service","d":"Pet wallpaper and lock-screen feature.","c":"Samsung","r":1},{"p":"com.sec.android.app.quicktool","l":3,"n":"Quick Tool","d":"Quick tools panel helper.","c":"Samsung","r":1},{"p":"com.sec.android.RilServiceModeApp","l":3,"n":"RIL Service Mode","d":"Radio diagnostics menu.","c":"Samsung","r":1},{"p":"com.samsung.android.authfw","l":3,"n":"Samsung Auth Framework","d":"Auth framework behind Samsung Pass and account.","c":"Samsung","r":1},{"p":"com.samsung.android.calendar","l":3,"n":"Samsung Calendar","d":"Samsung Calendar app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.email.provider","l":3,"n":"Samsung Email","d":"Samsung Email app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.kidsinstaller","l":3,"n":"Samsung Kids","d":"Installs Samsung Kids. Remove if unused.","c":"Samsung","r":1},{"p":"com.samsung.android.mdm","l":3,"n":"Samsung MDM","d":"Mobile device management client. Remove if not enrolled by an employer.","c":"Samsung","r":1},{"p":"com.samsung.android.messaging","l":3,"n":"Samsung Messages","d":"Stock SMS app. Remove only if Google Messages is your default.","c":"Samsung","r":1},{"p":"com.samsung.android.app.notes","l":3,"n":"Samsung Notes","d":"Notes app. Not restorable \u2014 needs Galaxy Store.","c":"Samsung","r":0},{"p":"com.samsung.android.samsungpass","l":3,"n":"Samsung Pass","d":"Samsung password manager and passkeys.","c":"Samsung","r":1},{"p":"com.samsung.android.samsungpassautofill","l":3,"n":"Samsung Pass Autofill","d":"Autofill provider for Samsung Pass.","c":"Samsung","r":1},{"p":"com.sec.spp.push","l":3,"n":"Samsung Push Service","d":"Push channel for Samsung apps and notifications.","c":"Samsung","r":0},{"p":"com.samsung.knox.securefolder","l":3,"n":"Secure Folder","d":"Encrypted private workspace. Remove only if you never use it.","c":"Samsung","r":1},{"p":"com.samsung.android.app.sketchbook","l":3,"n":"Sketchbook","d":"Sketching add-on for Samsung Notes / PENUP.","c":"Samsung","r":1},{"p":"com.skms.android.agent","l":3,"n":"SKMS Agent","d":"MDM/Knox management agent. Remove if not employer-managed.","c":"Samsung","r":1},{"p":"com.sec.android.easyMover.Agent","l":3,"n":"Smart Switch Agent","d":"Smart Switch background agent.","c":"Samsung","r":1},{"p":"com.samsung.android.smartswitchassistant","l":3,"n":"Smart Switch Assistant","d":"Phone-to-phone transfer helper.","c":"Samsung","r":1},{"p":"com.samsung.android.app.soundpicker","l":3,"n":"Sound Picker","d":"Picks sounds for notifications and alarms. Test alerts after removal.","c":"Samsung","r":1},{"p":"com.samsung.android.stickercenter","l":3,"n":"Sticker Center","d":"Stickers for the camera and AR.","c":"Samsung","r":1},{"p":"com.sec.sve","l":3,"n":"SVE","d":"Samsung video enhancement service. Unverified effect.","c":"Samsung","r":1},{"p":"com.samsung.android.service.tagservice","l":3,"n":"Tag Service","d":"NFC tag service framework.","c":"Samsung","r":1},{"p":"com.samsung.android.app.updatecenter","l":3,"n":"Update Center","d":"Updates preloaded Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.android.vtcamerasettings","l":3,"n":"Video Call Camera","d":"Camera settings for third-party video calls. Can break Meet or Zoom camera.","c":"Samsung","r":1},{"p":"com.sec.android.app.ve.vebgm","l":3,"n":"Video Editor Music","d":"Background music library for the video editor.","c":"Samsung","r":1},{"p":"com.samsung.android.visual.cloudcore","l":3,"n":"Visual Cloud Core","d":"Cloud processing for visual features.","c":"Samsung","r":1},{"p":"com.sec.android.app.voicenote","l":3,"n":"Voice Recorder","d":"Voice recorder app. Not restorable.","c":"Samsung","r":0},{"p":"com.sec.android.app.wlantest","l":3,"n":"WLAN Test","d":"Wi-Fi diagnostic test app.","c":"Samsung","r":1},{"p":"com.samsung.sec.android.application.csc","l":0,"n":"CSC","d":"Region and carrier configuration. Removing can break mobile data, VoLTE and OTA updates.","c":"Samsung","r":1},{"p":"com.samsung.android.ese","l":0,"n":"eSE Secure Element","d":"Embedded secure element used by Samsung Wallet and keys. Removing breaks tap-to-pay.","c":"Samsung","r":1},{"p":"com.samsung.android.app.omcagent","l":0,"n":"OMC Agent","d":"Carrier and region (CSC) configuration agent. Tied to mobile data and APN setup.","c":"Samsung","r":1},{"p":"com.sec.android.app.safetyassurance","l":0,"n":"Safety Assurance","d":"Emergency and SOS safety service.","c":"Samsung","r":1},{"p":"com.osp.app.signin","l":0,"n":"Samsung Account","d":"Samsung account sign-in. Breaks Galaxy Store, Find My, Samsung Cloud, backups.","c":"Samsung","r":0},{"p":"com.sec.android.app.billing","l":0,"n":"Samsung Billing","d":"In-app purchases for Galaxy Store. Removing breaks paid apps.","c":"Samsung","r":1},{"p":"com.sec.android.app.SecSetupWizard","l":0,"n":"Setup Wizard","d":"First-boot setup flow. Do not remove.","c":"Samsung","r":1},{"p":"com.google.mainline.telemetry","l":1,"n":"Mainline Telemetry","d":"Sends system-module usage stats to Google.","c":"Google","r":0},{"p":"com.google.android.onetimeinitializer","l":1,"n":"One-time Initializer","d":"Runs once during first boot. Safe after setup.","c":"Google","r":1},{"p":"com.google.android.printservice.recommendation","l":1,"n":"Print Recommendations","d":"Suggests print services. Safe.","c":"Google","r":1},{"p":"com.google.android.apps.aiwallpapers","l":2,"n":"AI Wallpapers","d":"Generative wallpaper feature in One UI 8.","c":"Google","r":1},{"p":"com.google.android.projection.gearhead","l":2,"n":"Android Auto","d":"In-car phone projection. Not restorable.","c":"Google","r":0},{"p":"com.android.chrome","l":2,"n":"Chrome","d":"Google Chrome. Not restorable \u2014 needs Play Store reinstall.","c":"Google","r":0},{"p":"com.google.android.apps.tachyon","l":2,"n":"Google Meet","d":"Video calls. Not restorable.","c":"Google","r":0},{"p":"com.google.android.apps.photos","l":2,"n":"Google Photos","d":"Photos app and cloud backup. Removing stops backup. Not restorable.","c":"Google","r":0},{"p":"com.google.android.apps.restore","l":2,"n":"Google Restore","d":"Restores data from an old phone during setup. Not restorable.","c":"Google","r":0},{"p":"com.google.android.healthconnect.controller","l":2,"n":"Health Connect","d":"Health data hub UI. Remove if you do not sync health apps. Installed as an APEX module \u2014 it may come back after a reboot.","c":"Google","r":1},{"p":"com.google.android.apps.books","l":2,"n":"Play Books","d":"Google Play Books reader. Not restorable.","c":"Google","r":0},{"p":"com.google.android.youtube","l":2,"n":"YouTube","d":"YouTube app.","c":"Google","r":1},{"p":"com.google.ar.core","l":3,"n":"ARCore","d":"AR engine used by AR apps and games. Not restorable.","c":"Google","r":0},{"p":"com.google.android.gms.supervision","l":3,"n":"Family Link","d":"Parental supervision component. Remove only if you do not use Family Link.","c":"Google","r":1},{"p":"com.google.audio.hearing.visualization.accessibility.scribe","l":3,"n":"Live Transcribe","d":"Accessibility transcription. Keep if needed.","c":"Google","r":1},{"p":"com.google.android.apps.accessibility.voiceaccess","l":3,"n":"Voice Access","d":"Accessibility control by voice. Keep if needed.","c":"Google","r":0},{"p":"com.google.android.googlequicksearchbox","l":0,"n":"Google App","d":"Search, Discover feed, Assistant voice trigger, Gemini entry point. Removing breaks home-screen search.","c":"Google","r":0},{"p":"com.google.android.syncadapters.calendar","l":0,"n":"Google Calendar Sync","d":"Sync adapter for Google Calendar. Removing stops Google calendars.","c":"Google","r":1},{"p":"com.google.android.partnersetup","l":0,"n":"Partner Setup","d":"Google partner configuration for region and carrier. Some apps misbehave without it.","c":"Google","r":0},{"p":"com.google.android.safetycenter.resources","l":0,"n":"Safety Center Assets","d":"Strings and assets for Android Safety Center (emergency info, SOS). Installed as an APEX module \u2014 it may come back after a reboot.","c":"Google","r":1},{"p":"com.android.bookmarkprovider","l":1,"n":"Bookmark Provider","d":"Stores stock-browser bookmarks. Safe if you never use that browser.","c":"Android","r":1},{"p":"com.android.wallpaper.livepicker","l":1,"n":"Live Wallpaper Picker","d":"Picker for live wallpapers. Safe with static wallpapers.","c":"Android","r":1},{"p":"com.android.role.notes.enabled","l":1,"n":"Notes Role Config","d":"Configuration for the system notes role.","c":"Android","r":1},{"p":"com.android.providers.partnerbookmarks","l":1,"n":"Partner Bookmarks","d":"Carrier bookmarks preloaded into the browser.","c":"Android","r":1},{"p":"com.android.dreams.basic","l":1,"n":"Screensaver","d":"Daydream screensaver, only used while docked or charging.","c":"Android","r":1},{"p":"com.android.internal.display.cutout.emulation.waterfall","l":1,"n":"Waterfall Cutout Emulator","d":"Developer option that fakes a waterfall display cutout.","c":"Android","r":1},{"p":"com.android.bips","l":2,"n":"Built-in Print","d":"Built-in printer discovery and printing. Remove only if you never print.","c":"Android","r":1},{"p":"com.android.apps.tag","l":2,"n":"NFC Tag","d":"AOSP reader/writer for NFC tags. Safe unless you write tags with it.","c":"Android","r":1},{"p":"com.android.printspooler","l":2,"n":"Print Spooler","d":"Print queue behind the print dialog.","c":"Android","r":1},{"p":"com.android.settings.intelligence","l":2,"n":"Settings Search","d":"Search index and suggestions inside Settings. Settings still works.","c":"Android","r":1},{"p":"com.android.stk","l":2,"n":"SIM Toolkit","d":"Carrier SIM menus (top-up, service codes).","c":"Android","r":1},{"p":"com.android.providers.userdictionary","l":2,"n":"User Dictionary","d":"Stores your custom keyboard words. Removing loses them.","c":"Android","r":1},{"p":"com.android.wallpapercropper","l":2,"n":"Wallpaper Cropper","d":"Crop screen for \"set wallpaper\". Removing breaks that flow.","c":"Android","r":1},{"p":"com.android.backupconfirm","l":3,"n":"Backup Confirm","d":"One-time dialog for adb backup. Safe to remove.","c":"Android","r":1},{"p":"com.monotype.android.font.foundation","l":3,"n":"Monotype Fonts","d":"Extra Monotype font pack. Removing may affect font selection.","c":"Android","r":1},{"p":"com.android.sharedstoragebackup","l":3,"n":"Shared Storage Backup","d":"Legacy adb-backup helper for shared storage.","c":"Android","r":1},{"p":"com.android.providers.calendar","l":0,"n":"Calendar Storage","d":"Stores every calendar event. Removing hides all calendars.","c":"Android","r":1},{"p":"com.monotype.android.font.samsungone","l":0,"n":"SamsungOne Font","d":"The system default font.","c":"Android","r":1},{"p":"com.touchtype.swiftkey","l":0,"n":"SwiftKey Keyboard","d":"Keyboard app. If it is your active keyboard, removing it leaves none.","c":"Android","r":0},{"p":"com.amazon.kindle","l":1,"n":"Kindle","d":"Preinstalled Amazon Kindle reader. Not restorable \u2014 needs Play Store reinstall.","c":"Preloads","r":0},{"p":"com.microsoft.appmanager","l":1,"n":"Link to Windows","d":"Bridge for Windows Phone Link. Remove if unused.","c":"Preloads","r":1},{"p":"com.linkedin.android","l":1,"n":"LinkedIn","d":"Preinstalled LinkedIn. Not restorable.","c":"Preloads","r":0},{"p":"com.microsoft.skydrive","l":1,"n":"OneDrive","d":"Preinstalled OneDrive.","c":"Preloads","r":1},{"p":"com.spotify.music","l":1,"n":"Spotify","d":"Preinstalled Spotify. Not restorable.","c":"Preloads","r":0},{"p":"com.tripadvisor.tripadvisor","l":1,"n":"Tripadvisor","d":"Preinstalled Tripadvisor. Not restorable.","c":"Preloads","r":0}];
+const TOKEN = new URLSearchParams(location.search).get("t") || "";
 const LEVEL = {1:"Conservative",2:"Balanced",3:"Aggressive",0:"Locked"};
-const state = new Set();
-const byPkg = Object.fromEntries(DATA.map(d => [d.p, d]));
+const S = {sel:new Set(), status:new Map(), tier:"all", cat:"all", q:"", restOnly:false,
+           showGone:false, installed:null, bridge:null, busy:false, lastRemoved:new Set()};
 const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const pkg = p => DATA.find(d => d.p === p);
+
+function visible(){
+  return DATA.filter(d => {
+    if (!S.showGone && S.installed && !S.installed.has(d.p)) return false;
+    if (S.tier !== "all" && d.l !== +S.tier) return false;
+    if (S.cat !== "all" && d.c !== S.cat) return false;
+    if (S.restOnly && !d.r) return false;
+    if (S.q && !(d.p + " " + d.n + " " + d.d).toLowerCase().includes(S.q)) return false;
+    return true;
+  });
+}
+
+function badge(d){
+  const st = S.status.get(d.p);
+  if (!st) return '<span class="st"></span>';
+  return '<span class="st show ' + st + '">' + (st === "working" ? "…" : st) + '</span>';
+}
 
 function render(){
-  const q = $("#q").value.trim().toLowerCase();
-  const list = $("#list");
+  const list = $("#list"), rows = visible();
   list.innerHTML = "";
-  const cats = [...new Set(DATA.map(d => d.c))];
+  const cats = [...new Set(rows.map(d => d.c))];
+  if (!rows.length) { list.innerHTML = '<p style="color:var(--muted);padding:24px 4px">No package matches these filters.</p>'; }
   for (const c of cats) {
-    const items = DATA.filter(d => d.c === c && (!q || (d.p + " " + d.n + " " + d.d).toLowerCase().includes(q)));
-    if (!items.length) continue;
+    const items = rows.filter(d => d.c === c);
     const g = document.createElement("section");
     g.className = "group";
     g.innerHTML = '<h2 class="ghead">' + c + ' <span>' + items.length + '</span></h2>';
+    list.appendChild(g);
     for (const d of items) {
+      const st = S.status.get(d.p);
+      const gone = st === "removed" || (S.installed && !S.installed.has(d.p));
       const row = document.createElement("label");
-      row.className = "row" + (d.l === 0 ? " locked" : "");
-      const checked = state.has(d.p) ? "checked" : "";
-      const dis = d.l === 0 ? "disabled" : "";
+      row.className = "row" + (d.l === 0 ? " locked" : "") + (gone ? " done" : "");
+      row.dataset.row = d.p;
+      const disabled = d.l === 0 || gone || S.busy ? "disabled" : "";
       row.innerHTML =
-        '<input type="checkbox" ' + checked + ' ' + dis + ' data-pkg="' + d.p + '">' +
-        '<div><div class="name">' + esc(d.n) + '</div>' +
-        '<div class="pkg">' + esc(d.p) + '</div>' +
-        '<div class="desc">' + esc(d.d) + '</div></div>' +
-        '<div class="tags">' +
+        '<input type="checkbox" ' + (S.sel.has(d.p) ? "checked" : "") + ' ' + disabled + ' data-pkg="' + d.p + '">' +
+        '<div><div class="name">' + esc(d.n) + '</div><div class="pkg">' + esc(d.p) + '</div>' +
+        '<div class="desc">' + esc(d.d) + (gone && st !== "removed" ? ' <span class="warn">(not installed)</span>' : '') + '</div></div>' +
+        '<div class="tags">' + badge(d) +
           '<span class="tag t' + d.l + '">' + LEVEL[d.l] + '</span>' +
           (d.l === 0 ? '<span class="tag t0">🔒 keep</span>' : '') +
           (d.r ? '' : '<span class="store">store</span>') +
         '</div>';
-      list.appendChild(g);
       g.appendChild(row);
     }
   }
-  updateBar();
+  updateUI();
 }
 
-function esc(s){ return s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function paintRow(p){
+  const el = document.querySelector('[data-row="' + p + '"]');
+  if (!el) return;
+  el.querySelector(".st").outerHTML = badge(pkg(p));
+  const st = S.status.get(p);
+  if (st === "removed") { el.classList.add("done"); const cb = el.querySelector("input"); cb.checked = false; cb.disabled = true; }
+}
 
-function updateBar(){
-  const sel = DATA.filter(d => state.has(d.p));
+function updateUI(){
+  const sel = DATA.filter(d => S.sel.has(d.p));
   $("#selCount").textContent = sel.length;
   $("#restCount").textContent = sel.filter(d => d.r).length;
   $("#storeCount").textContent = sel.filter(d => !d.r).length;
-  $("#gen").disabled = sel.length === 0;
-  const lockedTouched = false;
-  $("#warn").textContent = sel.length > 120 ? "Large change — reboot and test camera, calls and notifications." : "";
+  $("#apply").disabled = !S.bridge || S.busy || !sel.length;
+  $("#export").disabled = S.busy || !sel.length;
+  $("#undo").disabled = S.busy || !S.lastRemoved.size;
+  $("#undo").textContent = S.lastRemoved.size ? "Undo " + S.lastRemoved.size : "Undo";
+  $("#apply").textContent = S.busy ? "Working…" : "Apply to phone";
+  $("#opStatus").textContent = S.busy ? "don't unplug the phone" : "";
 }
 
-function preset(level){
-  state.clear();
-  DATA.forEach(d => { if (d.l > 0 && d.l <= level) state.add(d.p); });
-  document.querySelectorAll(".presets button").forEach(b => b.classList.toggle("on", +b.dataset.level === level));
+function setProgress(done, total){
+  $("#prog").style.width = total ? (100 * done / total) + "%" : "0";
+  if (total) $("#opStatus").textContent = done + " / " + total;
+}
+
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+async function post(action, packages){
+  try {
+    const r = await fetch("apply?t=" + encodeURIComponent(TOKEN), {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({action, packages})
+    });
+    return await r.json();
+  } catch (e) { return null; }
+}
+
+async function applySet(pkgs, action){
+  S.busy = true; updateUI();
+  let ok = 0;
+  for (let i = 0; i < pkgs.length; i++) {
+    const p = pkgs[i];
+    S.status.set(p, "working"); paintRow(p);
+    const res = await post(action, [p]);
+    const r = res && res.results && res.results[0];
+    if (!r) { S.status.set(p, "error"); render(); toast("Bridge connection lost"); S.busy = false; updateUI(); return; }
+    if (r.ok && action === "remove") {
+      S.status.set(p, "removed"); S.sel.delete(p); S.lastRemoved.add(p);
+      if (S.installed) S.installed.delete(p); ok++;
+    } else if (r.ok) {
+      S.status.set(p, "restored"); S.lastRemoved.delete(p);
+      if (S.installed) S.installed.add(p); ok++;
+    } else {
+      S.status.set(p, r.msg === "protected by the bridge" ? "error" : "skipped");
+    }
+    paintRow(p); setProgress(i + 1, pkgs.length);
+  }
+  S.busy = false; setProgress(0, 0); updateUI();
+  toast((action === "remove" ? "Removed " : "Restored ") + ok + " of " + pkgs.length + " packages");
   render();
 }
 
+function confirmApply(){
+  const sel = DATA.filter(d => S.sel.has(d.p));
+  const store = sel.filter(d => !d.r);
+  const crit = sel.filter(d => d.l === 3);
+  $("#cBody").innerHTML =
+    "<p><b>" + sel.length + " packages</b> will be removed for the current user on <b>" +
+      esc(S.bridge && S.bridge.device ? (S.bridge.device.model + " · " + S.bridge.device.serial) : "the phone") +
+      "</b>. Nothing is deleted from the system partition, so Undo can bring it back.</p>" +
+    "<ul><li>" + sel.filter(d => d.r).length + " can be restored with install-existing</li>" +
+    (store.length ? "<li class='warn'>" + store.length + " need a Play Store reinstall: " +
+      store.slice(0, 6).map(d => esc(d.n)).join(", ") + (store.length > 6 ? "…" : "") + "</li>" : "") +
+    (crit.length ? "<li class='warn'>" + crit.length + " deep cuts (Clock, Files, AI…) — test camera, calls, alarms after</li>" : "") +
+    "</ul>";
+  $("#confirm").showModal();
+}
+
+$("#cGo").addEventListener("click", () => {
+  const list = DATA.filter(d => S.sel.has(d.p)).map(d => d.p);
+  $("#confirm").close();
+  if (list.length) applySet(list, "remove");
+});
+["cCancel", "cCancel2"].forEach(id => $("#" + id).addEventListener("click", () => $("#confirm").close()));
+$("#apply").addEventListener("click", confirmApply);
+$("#undo").addEventListener("click", () => { const l = [...S.lastRemoved]; if (l.length) applySet(l, "restore"); });
+$("#clear").addEventListener("click", () => { S.sel.clear(); document.querySelectorAll(".presets button").forEach(b => b.classList.remove("on")); render(); });
+$("#selVisible").addEventListener("click", () => {
+  visible().forEach(d => { if (d.l !== 0 && !(S.installed && !S.installed.has(d.p))) S.sel.add(d.p); });
+  render();
+});
+$("#q").addEventListener("input", e => { S.q = e.target.value.trim().toLowerCase(); render(); });
+$("#cat").addEventListener("change", e => { S.cat = e.target.value; render(); });
+$("#restOnly").addEventListener("change", e => { S.restOnly = e.target.checked; render(); });
+$("#showGone").addEventListener("change", e => { S.showGone = e.target.checked; render(); });
+document.querySelectorAll(".fchip").forEach(b => b.addEventListener("click", () => {
+  S.tier = b.dataset.tier;
+  document.querySelectorAll(".fchip").forEach(x => x.classList.toggle("on", x === b));
+  render();
+}));
 $("#list").addEventListener("change", e => {
   const cb = e.target.closest('input[type=checkbox]');
   if (!cb) return;
-  cb.checked ? state.add(cb.dataset.pkg) : state.delete(cb.dataset.pkg);
+  cb.checked ? S.sel.add(cb.dataset.pkg) : S.sel.delete(cb.dataset.pkg);
   document.querySelectorAll(".presets button").forEach(b => b.classList.remove("on"));
-  updateBar();
+  updateUI();
 });
+function preset(level){
+  S.sel.clear();
+  DATA.forEach(d => {
+    if (d.l > 0 && d.l <= level && !(S.installed && !S.installed.has(d.p))) S.sel.add(d.p);
+  });
+  document.querySelectorAll(".presets button").forEach(b => b.classList.toggle("on", +b.dataset.level === level));
+  render();
+}
 document.querySelectorAll(".presets button").forEach(b => b.addEventListener("click", () => preset(+b.dataset.level)));
-$("#q").addEventListener("input", render);
-$("#clear").addEventListener("click", () => { state.clear(); document.querySelectorAll(".presets button").forEach(b=>b.classList.remove("on")); render(); });
 
-const STAMP = "2026-10-21";
-function selected(){ return DATA.filter(d => state.has(d.p)); }
+/* ---- export ---- */
+function selected(){ return DATA.filter(d => S.sel.has(d.p)); }
 function listText(){
   const s = selected();
-  return "# " + s.length + " packages — SM-S911B (Galaxy S23), Android 16 / One UI 8\n" +
-         "# Generated " + STAMP + " from samsung-debloat-script web picker\n" +
-         "# Restore with revert.sh (same folder) or: adb shell cmd package install-existing <pkg>\n" +
+  return "# " + s.length + " packages — generated " + "2026-10-21" + "\n" +
          s.map(d => d.p).join("\n") + "\n";
 }
 function removeText(){
   const s = selected();
-  const store = s.filter(d => !d.r).map(d => "#   " + d.p);
-  return "#!/usr/bin/env bash\n" +
-  "# Generated " + STAMP + " — removes " + s.length + " apps for user 0 on SM-S911B.\n" +
-  "# Nothing is deleted from /system. Undo with revert.sh.\n" +
-  "set -uo pipefail\n" +
+  return "#!/usr/bin/env bash\n# " + s.length + " packages, generated 2026-10-21\nset -uo pipefail\n" +
   "DEV=${1:-$(adb devices | awk 'NR>1 && $2==\"device\"{print $1; exit}')}\n" +
-  "[ -z \"${DEV:-}\" ] && { echo \"No authorised device. Enable USB debugging.\"; exit 1; }\n" +
-  "echo \"Target: $DEV\"\n" +
-  (store.length ? "\n# These are NOT restorable with install-existing (Play Store reinstall needed):\n" + store.join("\n") + "\n" : "") +
-  "ok=0; skip=0\n" +
-  "remove(){\n" +
-  "  if adb -s \"$DEV\" shell pm uninstall -k --user 0 \"$1\" | tr -d '\\r' | grep -q Success; then\n" +
-  "    echo \"  removed  $1\"; ok=$((ok+1))\n" +
-  "  else\n" +
-  "    echo \"  skipped  $1\"; skip=$((skip+1))\n" +
-  "  fi\n" +
-  "}\n" +
-  s.map(d => "remove " + d.p).join("\n") + "\n" +
-  "echo\n" +
-  "echo \"Removed: $ok   Skipped: $skip\"\n" +
-  "echo \"Reboot when ready:  adb -s $DEV reboot\"\n";
+  "[ -z \"${DEV:-}\" ] && { echo \"No authorised device.\"; exit 1; }\n" +
+  s.map(d => "adb -s \"$DEV\" shell pm uninstall -k --user 0 " + d.p).join("\n") + "\n" +
+  "echo \"Reboot: adb -s $DEV reboot\"\n";
 }
 function revertText(){
   const s = selected();
-  return "#!/usr/bin/env bash\n" +
-  "# Generated " + STAMP + " — restores " + s.length + " apps for user 0 on SM-S911B.\n" +
-  "set -uo pipefail\n" +
+  return "#!/usr/bin/env bash\n# " + s.length + " packages, generated 2026-10-21\nset -uo pipefail\n" +
   "DEV=${1:-$(adb devices | awk 'NR>1 && $2==\"device\"{print $1; exit}')}\n" +
   "[ -z \"${DEV:-}\" ] && { echo \"No authorised device.\"; exit 1; }\n" +
-  "echo \"Target: $DEV\"\n" +
-  "ok=0; skip=0\n" +
-  "restore(){\n" +
-  "  if adb -s \"$DEV\" shell cmd package install-existing \"$1\" | tr -d '\\r' | grep -qi 'installed for user'; then\n" +
-  "    echo \"  restored $1\"; ok=$((ok+1))\n" +
-  "  else\n" +
-  "    echo \"  skipped  $1\"; skip=$((skip+1))\n" +
-  "  fi\n" +
-  "}\n" +
-  s.map(d => "restore " + d.p).join("\n") + "\n" +
-  "echo\n" +
-  "echo \"Restored: $ok   Skipped: $skip\"\n" +
-  "echo \"Reboot when ready:  adb -s $DEV reboot\"\n";
+  s.map(d => "adb -s \"$DEV\" shell cmd package install-existing " + d.p).join("\n") + "\n";
 }
-const TABS = {
-  list: {text: listText, file: "list_app.txt", note: "Save next to debloat.sh."},
-  rm: {text: removeText, file: "debloat.sh", note: "chmod +x debloat.sh && ./debloat.sh"},
-  rv: {text: revertText, file: "revert.sh", note: "chmod +x revert.sh && ./revert.sh"}
-};
+const TABS = {list:{f:listText,file:"list_app.txt",note:"next to debloat.sh"},
+              rm:{f:removeText,file:"debloat.sh",note:"chmod +x debloat.sh"},
+              rv:{f:revertText,file:"revert.sh",note:"chmod +x revert.sh"}};
 let tab = "list";
 function showTab(t){
-  tab = t;
-  $("#out").textContent = TABS[t].text();
-  $("#dnote").textContent = TABS[t].note;
+  tab = t; $("#out").textContent = TABS[t].f(); $("#dnote").textContent = TABS[t].note;
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
-$("#gen").addEventListener("click", () => {
-  $("#dtitle").textContent = selected().length + " packages selected";
-  showTab("list"); $("#dlg").showModal();
-});
+$("#export").addEventListener("click", () => { $("#dtitle").textContent = selected().length + " packages"; showTab("list"); $("#dlg").showModal(); });
 $("#close").addEventListener("click", () => $("#dlg").close());
-$("#copy").addEventListener("click", async () => {
-  await navigator.clipboard.writeText(TABS[tab].text());
-  $("#copy").textContent = "Copied"; setTimeout(() => $("#copy").textContent = "Copy", 1200);
-});
+$("#copy").addEventListener("click", async () => { await navigator.clipboard.writeText(TABS[tab].f()); $("#copy").textContent = "Copied"; setTimeout(() => $("#copy").textContent = "Copy", 1200); });
 $("#download").addEventListener("click", () => {
-  const blob = new Blob([TABS[tab].text()], {type: "text/plain"});
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = TABS[tab].file; a.click();
-  URL.revokeObjectURL(a.href);
+  a.href = URL.createObjectURL(new Blob([TABS[tab].f()], {type:"text/plain"}));
+  a.download = TABS[tab].file; a.click(); URL.revokeObjectURL(a.href);
 });
-preset(2);
+
+/* ---- bridge ---- */
+async function probe(){
+  if (location.protocol === "file:") { S.bridge = null; paintBridge(); return; }
+  try {
+    const h = await (await fetch("health", {cache:"no-store"})).json();
+    S.bridge = h;
+    try {
+      const i = await (await fetch("installed", {cache:"no-store"})).json();
+      if (i && i.packages) S.installed = new Set(i.packages);
+    } catch (e) {}
+  } catch (e) { S.bridge = null; }
+  paintBridge();
+  render();
+}
+function paintBridge(){
+  const chip = $("#chipBridge"), banner = $("#banner");
+  if (S.bridge && S.bridge.ok) {
+    const d = S.bridge.device || {};
+    chip.className = "chip ok";
+    chip.innerHTML = "bridge ready" + (S.bridge.dry_run ? " · <b>dry run</b>" : "") +
+      (d.model ? " · <b>" + esc(d.model) + "</b>" : "");
+    if (d.model) $("#chipDevice").innerHTML = "<b>" + esc(d.model) + "</b> · adb <b>" + esc(d.serial || "") + "</b>";
+    banner.classList.remove("show");
+  } else {
+    chip.className = "chip bad";
+    chip.textContent = "bridge offline";
+    banner.classList.add("show");
+  }
+  updateUI();
+}
+probe().then(() => { if (!S.sel.size) preset(2); else render(); });
 </script>
 </body>
 </html>

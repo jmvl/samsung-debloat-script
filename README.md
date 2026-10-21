@@ -95,18 +95,28 @@ If you want to restore the removed apps:
    ./revert_linux_mac.sh
    ```
 
-## 🖱️ Web package picker (optional)
+## 🖱️ Web picker with direct apply (optional)
 
-`web/index.html` is one self-contained file. Open it in any browser. It needs no server, no build step and no internet access.
+The picker can apply changes to the phone. A browser cannot call `adb`, so a small local bridge does it.
 
-- It lists the 159 packages from `script/list_app.txt` that actually exist on a Galaxy S23 with Android 16 / One UI 8.
-- Each package shows a plain-English description of what stops working when you remove it.
-- Three presets: **Conservative** (19), **Balanced** (75), **Aggressive** (145).
-- 14 packages are locked and cannot be selected. Examples: CSC, eSE Secure Element, Setup Wizard, Samsung Account.
-- It shows which packages `cmd package install-existing` can restore, and which need a Play Store reinstall.
-- It generates `list_app.txt`, `debloat.sh` and `revert.sh` for your selection.
+1. Start the bridge. It needs Python 3 only:
 
-Already excluded from the list: Maps, Gmail, Docs, TTS, Gemini, Google Wallet, NFC and Play services.
+   ```
+   python3 web/server.py            # real changes
+   python3 web/server.py --dry-run  # test the UI, change nothing
+   ```
+
+2. Open the URL printed at startup, for example `http://127.0.0.1:8765/?t=...`
+3. Pick a preset or tick packages. Press **Apply to phone**.
+
+- The bridge listens on 127.0.0.1 only. Every change request needs the token printed at startup.
+- The bridge refuses 20 protected packages: CSC, eSE, Setup Wizard, Samsung Account, Google Wallet, NFC, Play services and others.
+- It shows which packages are already removed on the connected phone.
+- **Undo** restores the packages you removed in the last run. Every change is per-user (`pm uninstall -k --user 0`).
+- Filters: tier, category, restorable-only, and free text over name, package and effect.
+- No bridge? Open `web/index.html` from disk. It still exports `list_app.txt`, `debloat.sh` and `revert.sh`.
+
+Presets: Conservative (19), Balanced (75), Aggressive (145). 14 packages are locked.
 
 ![Package picker](img/picker.png)
 
