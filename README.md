@@ -73,6 +73,8 @@ com.samsung.android.app.reminder
 4. Enter your password when prompted for sudo access
 5. Follow the on-screen instructions
 
+On macOS the script skips the `adbusers`/sudo step. macOS has no `adbusers` group and needs no udev rules.
+
 ### Step 4: Restore Apps (If Needed)
 
 If you want to restore the removed apps:
@@ -92,6 +94,21 @@ If you want to restore the removed apps:
    ```
    ./revert_linux_mac.sh
    ```
+
+## 🖱️ Web package picker (optional)
+
+`web/index.html` is one self-contained file. Open it in any browser. It needs no server, no build step and no internet access.
+
+- It lists the 159 packages from `script/list_app.txt` that actually exist on a Galaxy S23 with Android 16 / One UI 8.
+- Each package shows a plain-English description of what stops working when you remove it.
+- Three presets: **Conservative** (19), **Balanced** (75), **Aggressive** (145).
+- 14 packages are locked and cannot be selected. Examples: CSC, eSE Secure Element, Setup Wizard, Samsung Account.
+- It shows which packages `cmd package install-existing` can restore, and which need a Play Store reinstall.
+- It generates `list_app.txt`, `debloat.sh` and `revert.sh` for your selection.
+
+Already excluded from the list: Maps, Gmail, Docs, TTS, Gemini, Google Wallet, NFC and Play services.
+
+![Package picker](img/picker.png)
 
 ## 📝 Tips
 
