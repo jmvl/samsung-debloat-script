@@ -3,155 +3,263 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Samsung Debloat — package picker</title>
+<title>Debloat — Galaxy S23</title>
 <style>
-  :root{--bg:#0f1115;--panel:#171a21;--panel2:#1d212a;--line:#2a2f3a;--fg:#e8ebf0;--muted:#9aa4b2;
-    --accent:#4ade80;--accent2:#38bdf8;--amber:#fbbf24;--red:#f87171;--radius:12px}
+  :root{
+    --ink:#0a0b0c; --ink2:#0f1113; --hair:#22272e; --hair2:#2f3640;
+    --paper:#eef0ea; --mut:#98a1ab; --mut2:#7b8590;
+    --acid:#c8f751; --amber:#ffb020; --red:#ff5c46; --cyan:#6fd3ff;
+    --rail:264px;
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif}
-  a{color:var(--accent2)}
-  header{position:sticky;top:0;z-index:20;background:rgba(15,17,21,.95);backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--line)}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
-  .head{padding:16px 0 10px}
-  h1{margin:0;font-size:20px;letter-spacing:-.02em}
-  h1 span{color:var(--muted);font-weight:500}
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
-  .chip{font-size:12px;color:var(--muted);border:1px solid var(--line);background:var(--panel);
-    padding:3px 9px;border-radius:999px;white-space:nowrap}
-  .chip b{color:var(--fg);font-weight:600}
-  .chip.ok{color:var(--accent);border-color:rgba(74,222,128,.35)}
-  .chip.bad{color:var(--amber);border-color:rgba(251,191,36,.35)}
-  .banner{display:none;margin:10px 0 0;padding:10px 14px;border:1px solid rgba(251,191,36,.35);
-    background:rgba(251,191,36,.08);color:#fde68a;border-radius:10px;font-size:13px}
-  .banner.show{display:block}
-  .banner code{background:rgba(0,0,0,.35);padding:1px 6px;border-radius:6px;font-size:12px}
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 0 6px}
-  .search{flex:1 1 240px;min-width:200px;background:var(--panel);border:1px solid var(--line);
-    color:var(--fg);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
-  .search:focus{border-color:var(--accent2)}
-  .presets{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
-  .presets button{background:transparent;border:0;color:var(--muted);padding:7px 11px;border-radius:8px;
-    font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
-  .presets button:hover{color:var(--fg);background:var(--panel2)}
-  .presets button.on{background:var(--accent);color:#06210f;font-weight:600}
-  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 0 12px;border-bottom:1px solid var(--line)}
-  .fchip{font-size:12.5px;border:1px solid var(--line);background:var(--panel);color:var(--muted);
-    border-radius:999px;padding:5px 11px;cursor:pointer}
-  .fchip b{color:inherit;font-weight:600;opacity:.75}
-  .fchip:hover{color:var(--fg)}
-  .fchip.on{background:var(--panel2);border-color:#3d4553;color:var(--fg)}
-  .fchip.on.t1{border-color:rgba(74,222,128,.5);color:var(--accent)}
-  .fchip.on.t2{border-color:rgba(251,191,36,.5);color:var(--amber)}
-  .fchip.on.t3{border-color:rgba(248,113,113,.5);color:var(--red)}
-  select.fsel{background:var(--panel);border:1px solid var(--line);color:var(--fg);
-    border-radius:999px;padding:6px 10px;font-size:12.5px}
-  .switch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
-  .switch input{accent-color:var(--accent);width:15px;height:15px}
-  .spacer{flex:1}
-  .mini{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:1px dashed var(--line);
-    border-radius:999px;padding:5px 11px;cursor:pointer}
-  .mini:hover{color:var(--fg);border-color:#3d4553}
-  main{padding:6px 0 130px}
-  .group{margin-top:20px}
-  .ghead{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;font-size:12px;
-    text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-  .ghead span{color:var(--line)}
-  .row{display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:start;padding:11px 14px;
-    border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);margin-bottom:6px}
-  .row:hover{border-color:#38404e}
-  .row.locked{opacity:.6}
-  .row.done{opacity:.55}
-  .row input{margin:3px 0 0;width:17px;height:17px;accent-color:var(--accent);cursor:pointer}
-  .row input:disabled{cursor:not-allowed}
-  .name{font-weight:600;font-size:14.5px}
-  .pkg{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted);word-break:break-all}
-  .desc{color:#c3cad6;font-size:13.5px;margin-top:3px}
-  .tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:130px}
-  .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
-  .t1{background:rgba(74,222,128,.14);color:var(--accent)}
-  .t2{background:rgba(251,191,36,.14);color:var(--amber)}
-  .t3{background:rgba(248,113,113,.14);color:var(--red)}
-  .t0{background:rgba(154,164,178,.16);color:var(--muted)}
-  .store{font-size:11px;color:var(--muted);border:1px dashed var(--line);padding:2px 7px;border-radius:999px}
-  .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;display:none}
+  html{scrollbar-color:var(--hair2) var(--ink);scrollbar-width:thin}
+  ::selection{background:var(--acid);color:#0a0b0c}
+  body{margin:0;background:var(--ink);color:var(--paper);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Inter,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--hair2)}
+  ::-webkit-scrollbar-track{background:var(--ink)}
+  a{color:var(--cyan)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
+  :focus-visible{outline:2px solid var(--acid);outline-offset:2px}
+
+  /* ---------- header ---------- */
+  header{padding:26px 0 0;border-bottom:1px solid var(--hair)}
+  .hwrap{max-width:1320px;margin:0 auto;padding:0 20px 22px;display:grid;
+    grid-template-columns:1fr auto;gap:28px;align-items:end}
+  h1{margin:0;font-size:clamp(44px,7vw,84px);line-height:.86;font-weight:800;
+    letter-spacing:-.035em;text-transform:uppercase}
+  h1 em{font-style:normal;color:var(--acid)}
+  .sub{margin:12px 0 0;color:var(--mut);font-size:13px;letter-spacing:.01em}
+  .sub b{color:var(--paper);font-weight:600}
+  .hright{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+  .statline{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+  .chip{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);
+    border:1px solid var(--hair2);padding:4px 8px;white-space:nowrap}
+  .chip b{color:var(--paper);font-weight:600}
+  .chip.ok{color:var(--acid);border-color:color-mix(in srgb,var(--acid) 45%,transparent)}
+  .chip.bad{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 45%,transparent)}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  .mini{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);
+    border:1px solid var(--hair2);padding:4px 9px;transition:color .15s,border-color .15s}
+  .mini:hover{color:var(--paper);border-color:var(--paper)}
+  .mini:disabled{opacity:.35;cursor:default}
+  .search{width:min(340px,72vw);background:var(--ink2);border:1px solid var(--hair2);
+    color:var(--paper);padding:10px 12px;font-size:13px;outline:none;
+    transition:border-color .15s}
+  .search::placeholder{color:var(--mut2)}
+  .search:focus{border-color:var(--acid)}
+  .banner{display:none;margin:0 auto;max-width:1320px;padding:11px 20px;border-top:1px solid color-mix(in srgb,var(--amber) 40%,transparent);
+    background:color-mix(in srgb,var(--amber) 9%,var(--ink));color:#ffd98a;font-size:12.5px}
+  .banner.show{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .banner code{background:rgba(0,0,0,.4);padding:1px 5px;color:var(--paper)}
+
+  /* ---------- shell ---------- */
+  .shell{max-width:1320px;margin:0 auto;padding:26px 20px 150px;display:grid;
+    grid-template-columns:var(--rail) 1fr;gap:36px;align-items:start}
+  .rail{position:sticky;top:20px;display:flex;flex-direction:column;gap:26px}
+  .rlabel{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2);margin:0 0 8px}
+  .presets{display:flex;flex-direction:column;gap:6px}
+  .presets button{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;
+    border:1px solid var(--hair2);padding:11px 12px;text-align:left;transition:border-color .15s,color .15s}
+  .presets button b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  .presets button span{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+  .presets button:hover{border-color:var(--paper)}
+  .presets button:hover span{color:var(--paper)}
+  .presets button.on{background:var(--acid);border-color:var(--acid);color:#0a0b0c}
+  .presets button.on span{color:#333b12}
+  .presets button.on b{color:#0a0b0c}
+
+  .tiers{display:flex;flex-direction:column;gap:2px}
+  .fchip{display:flex;align-items:center;gap:9px;width:100%;padding:7px 0;color:var(--mut);
+    font-size:12.5px;border-bottom:1px solid var(--hair);transition:color .15s}
+  .fchip:hover{color:var(--paper)}
+  .fchip i{width:9px;height:9px;background:var(--hair2);flex:none}
+  .fchip.t1 i{background:var(--acid)} .fchip.t2 i{background:var(--amber)}
+  .fchip.t3 i{background:var(--red)} .fchip.t0 i{background:var(--mut2)}
+  .fchip b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;color:var(--mut2)}
+  .fchip.on{color:var(--paper)}
+  .fchip.on b{color:var(--paper)}
+  .fchip.on::after{content:"";width:14px;height:1px;background:var(--paper)}
+  .fchip{border-bottom:1px solid var(--hair)}
+  .fchip.on::after{margin-left:6px}
+  .ctl{display:flex;flex-direction:column;gap:10px}
+  select{width:100%;background:var(--ink2);border:1px solid var(--hair2);color:var(--paper);
+    padding:8px 10px;font-size:12.5px;outline:none}
+  select:focus{border-color:var(--acid)}
+  .switch{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:12.5px;cursor:pointer}
+  .switch input{appearance:none;width:14px;height:14px;border:1px solid var(--hair2);cursor:pointer;flex:none}
+  .switch input:checked{background:var(--acid);border-color:var(--acid)}
+  .switch:hover{color:var(--paper)}
+  .rbtns{display:flex;gap:6px}
+  .rbtns button{flex:1}
+
+  /* ---------- list ---------- */
+  main{min-width:0}
+  .group{margin:0 0 26px}
+  .ghead{display:flex;align-items:baseline;gap:10px;margin:0 0 2px;padding:0 0 6px;
+    border-bottom:1px solid var(--hair2);font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--mut2)}
+  .ghead b{color:var(--paper);font-weight:600;letter-spacing:.1em}
+  .ghead span{margin-left:auto;font-variant-numeric:tabular-nums}
+  .row{display:grid;grid-template-columns:19px 1fr auto;gap:13px;align-items:start;
+    padding:11px 8px 11px 0;border-bottom:1px solid var(--hair);cursor:pointer;
+    transition:opacity .18s}
+  .row:hover{background:var(--ink2)}
+  .row.locked{opacity:.55;cursor:default}
+  .row.done{opacity:.4}
+  .row input{appearance:none;width:17px;height:17px;margin:3px 0 0;border:1px solid var(--hair2);
+    background:transparent;cursor:pointer;position:relative;flex:none;transition:border-color .12s}
+  .row input:hover{border-color:var(--paper)}
+  .row input:checked{background:var(--acid);border-color:var(--acid)}
+  .row input:checked::after{content:"";position:absolute;left:5px;top:1px;width:4px;height:9px;
+    border:solid #0a0b0c;border-width:0 2px 2px 0;transform:rotate(40deg)}
+  .row input:disabled{cursor:default;opacity:.5}
+  .line1{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .nm{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+  .pk{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--mut2);
+    word-break:break-all}
+  .desc{color:#b6bdc6;font-size:12.8px;margin-top:2px;max-width:70ch}
+  .side{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap;
+    padding-top:1px;min-width:126px}
+  .tier{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--mut);white-space:nowrap}
+  .tier i{width:7px;height:7px;background:var(--mut2)}
+  .tier.t1 i{background:var(--acid)} .tier.t2 i{background:var(--amber)}
+  .tier.t3 i{background:var(--red)}
+  .store{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);
+    border:1px solid color-mix(in srgb,var(--cyan) 35%,transparent);padding:1px 5px}
+  .st{display:none;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px}
   .st.show{display:inline-block}
-  .st.removed{background:rgba(74,222,128,.18);color:var(--accent)}
-  .st.restored{background:rgba(56,189,248,.18);color:var(--accent2)}
-  .st.skipped{background:rgba(251,191,36,.18);color:var(--amber)}
-  .st.error{background:rgba(248,113,113,.18);color:var(--red)}
-  .st.working{background:rgba(232,235,240,.14);color:var(--fg)}
-  footer{position:fixed;bottom:0;left:0;right:0;z-index:30;border-top:1px solid var(--line);
-    background:rgba(15,17,21,.96);backdrop-filter:blur(12px)}
-  .fbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0 12px}
-  .stat{color:var(--muted);font-size:13px}
-  .stat b{color:var(--fg)}
-  .btn{font:inherit;font-size:13.5px;border-radius:10px;padding:9px 14px;cursor:pointer;
-    border:1px solid var(--line);background:var(--panel);color:var(--fg)}
-  .btn:hover{background:var(--panel2)}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:#06210f;font-weight:700}
-  .btn.primary:hover{filter:brightness(1.06)}
-  .btn.ghost{background:transparent}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .progress{height:3px;background:transparent}
-  .progress i{display:block;height:3px;width:0;background:var(--accent);transition:width .2s}
-  dialog{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;
-    padding:0;width:min(820px,94vw);max-height:86vh}
-  dialog::backdrop{background:rgba(0,0,0,.66)}
-  .dhead{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
-  .dhead h2{margin:0;font-size:16px;flex:1}
-  .dbody{padding:16px 18px;font-size:14px}
-  .dbody ul{margin:8px 0 0;padding-left:20px;color:var(--muted);font-size:13px}
-  .dbody li{margin:3px 0}
-  .dbar{display:flex;gap:8px;padding:0 18px 18px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-  .tabs{display:flex;gap:6px;padding:12px 18px 0}
-  .tabs button{background:transparent;border:1px solid transparent;color:var(--muted);padding:7px 11px;
-    border-radius:9px;font:inherit;font-size:13px;cursor:pointer}
-  .tabs button.on{background:var(--panel);border-color:var(--line);color:var(--fg)}
-  pre{margin:12px 18px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    max-height:42vh;overflow:auto;font-size:12px;line-height:1.55;
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre}
+  .st.removed{background:var(--acid);color:#0a0b0c}
+  .st.restored{background:color-mix(in srgb,var(--cyan) 20%,transparent);color:var(--cyan)}
+  .st.skipped{background:color-mix(in srgb,var(--amber) 20%,transparent);color:var(--amber)}
+  .st.error{background:color-mix(in srgb,var(--red) 22%,transparent);color:var(--red)}
+  .st.working{background:var(--hair2);color:var(--paper)}
+  .empty{color:var(--mut);font-size:13px;padding:30px 0;border-bottom:1px solid var(--hair)}
+
+  /* ---------- dock ---------- */
+  footer{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--ink);
+    border-top:1px solid var(--hair2)}
+  .prog{display:block;height:2px;width:0;background:var(--acid);transition:width .25s}
+  .dock{max-width:1320px;margin:0 auto;padding:14px 20px;display:flex;gap:22px;align-items:center}
+  .dcount{display:flex;align-items:baseline;gap:8px}
+  .dcount b{font-size:38px;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+  .dcount span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2)}
+  .dstats{display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--mut);min-height:32px;justify-content:center}
+  .dstats b{color:var(--paper);font-weight:600;font-variant-numeric:tabular-nums}
+  .spacer{flex:1}
+  .btn{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;border:1px solid var(--hair2);
+    padding:11px 16px;color:var(--mut);transition:color .15s,border-color .15s}
+  .btn:hover:not(:disabled){color:var(--paper);border-color:var(--paper)}
+  .btn:disabled{opacity:.35;cursor:default}
+  .btn.apply{background:var(--acid);border-color:var(--acid);color:#0a0b0c;font-weight:700;
+    padding:11px 26px}
+  .btn.apply:hover:not(:disabled){filter:brightness(1.08);color:#0a0b0c}
+  .btn.apply:disabled{background:transparent;color:var(--mut2);border-color:var(--hair2)}
+
+  /* ---------- dialogs ---------- */
+  dialog{border:1px solid var(--hair2);background:var(--ink2);color:var(--paper);padding:0;
+    width:min(760px,94vw);max-height:86vh}
+  dialog::backdrop{background:rgba(4,5,6,.78)}
+  .dhead{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--hair2)}
+  .dhead h2{margin:0;font-size:15px;letter-spacing:.02em;flex:1}
+  .dbody{padding:18px 20px;font-size:13.5px;line-height:1.6}
+  .dbody p{margin:0 0 10px}
+  .dbody ul{margin:0;padding-left:18px;color:var(--mut);font-size:12.5px}
+  .dbody li{margin:4px 0}
+  .dbody b{color:var(--paper)}
+  .dbar{display:flex;gap:8px;padding:0 20px 18px;align-items:center;justify-content:flex-end}
+  .tabs{display:flex;gap:2px;padding:14px 20px 0}
+  .tabs button{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut2);
+    padding:7px 10px;border-bottom:2px solid transparent}
+  .tabs button.on{color:var(--paper);border-bottom-color:var(--acid)}
+  pre{margin:12px 20px;padding:14px;background:var(--ink);border:1px solid var(--hair);
+    max-height:40vh;overflow:auto;font-size:11.5px;line-height:1.6;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#c9d1d9;white-space:pre}
   .warn{color:var(--amber)}
-  .toast{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);background:var(--panel2);
-    border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;
-    opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
-  .toast.show{opacity:1}
+  .toast{position:fixed;bottom:96px;left:50%;transform:translate(-50%,8px);background:var(--acid);
+    color:#0a0b0c;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:9px 18px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:40}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:22px;padding-bottom:180px}
+    .rail{position:static;display:grid;grid-template-columns:1fr 1fr;gap:20px 28px}
+    .rail section:first-child{grid-column:1/-1}
+    .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .presets button{padding:10px 11px}
+    .presets button b{font-size:19px}
+    .presets button span{font-size:11px;letter-spacing:.02em}
+    .hwrap{grid-template-columns:1fr;align-items:start}
+    .hright{align-items:stretch}
+    .statline{justify-content:flex-start}
+    .search{width:100%}
+    .dock{gap:12px;flex-wrap:wrap;padding:12px 16px}
+    .dcount b{font-size:30px}
+  }
+  @media (max-width:620px){
+    h1{font-size:40px}
+    .rail{grid-template-columns:1fr}
+    .rail section:first-child{grid-column:auto}
+    .presets button b{font-size:17px}
+    .presets button span{font-size:11px;letter-spacing:0}
+    .row{grid-template-columns:19px 1fr;gap:10px}
+    .side{grid-column:2;justify-content:flex-start;min-width:0;padding-top:4px}
+    .dstats{display:none}
+    .dcount b{font-size:26px}
+    .dock .btn{flex:1;padding:10px 10px}
+    .dock .btn.apply{flex:1 1 100%;order:9;padding:13px 10px}
+    .toast{bottom:150px}
+  }
 </style>
 </head>
 <body>
 <header>
-  <div class="wrap">
-    <div class="head">
-      <h1>Samsung Debloat <span>— package picker</span></h1>
-      <div class="meta">
-        <span class="chip" id="chipBridge">bridge: checking…</span>
-        <button class="mini" id="reconnect" title="Check the bridge again without reloading">Reconnect</button>
-        <span class="chip" id="chipDevice"><b>SM-S911B</b> Galaxy S23</span>
-        <span class="chip" id="chipAndroid">Android <b>16</b> · One UI <b>8</b></span>
-        <span class="chip"><b>159</b> packages</span>
-      </div>
-      <div class="banner" id="banner">
-        <span id="bannerText">Bridge offline — this page can only export files. Start it with
-        <code>python3 web/server.py</code> and open the URL it prints.</span>
-        <button class="mini" id="retry" style="margin-left:10px">Retry</button>
-      </div>
+  <div class="hwrap">
+    <div>
+      <h1>Debloat<em>.</em></h1>
+      <p class="sub"><b>Galaxy S23</b> · SM-S911B · Android 16 · One UI 8 · 159 removable packages</p>
     </div>
-    <div class="toolbar">
-      <input class="search" id="q" type="search" placeholder="Filter by app, package or effect…" aria-label="Filter packages">
-      <div class="presets" role="group" aria-label="Presets">
-        <button data-level="1">Conservative <small>19</small></button>
-        <button data-level="2">Balanced <small>75</small></button>
-        <button data-level="3">Aggressive <small>145</small></button>
+    <div class="hright">
+      <div class="statline">
+        <span class="chip" id="chipBridge">checking bridge</span>
+        <button class="mini" id="reconnect">Reconnect</button>
+        <span class="chip" id="chipDevice"><b>SM-S911B</b></span>
+        <span class="chip" id="chipAndroid">Android <b>16</b></span>
       </div>
+      <input class="search" id="q" type="search" placeholder="Search app, package, effect…" aria-label="Filter packages">
     </div>
-    <div class="filters">
-      <button class="fchip on" data-tier="all">All <b>159</b></button>
-      <button class="fchip t1" data-tier="1">Conservative <b>19</b></button>
-      <button class="fchip t2" data-tier="2">Balanced <b>75</b></button>
-      <button class="fchip t3" data-tier="3">Aggressive <b>145</b></button>
-      <button class="fchip" data-tier="0">Locked <b>14</b></button>
-      <select class="fsel" id="cat" aria-label="Category">
+  </div>
+  <div class="banner" id="banner">
+    <span id="bannerText">Bridge offline — start <code>python3 web/server.py</code> and open the URL it prints.</span>
+    <button class="mini" id="retry">Retry</button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="rail">
+    <section>
+      <p class="rlabel">Presets</p>
+      <div class="presets">
+        <button data-level="1"><b>19</b><span>Conservative</span></button>
+        <button data-level="2"><b>75</b><span>Balanced</span></button>
+        <button data-level="3"><b>145</b><span>Aggressive</span></button>
+      </div>
+    </section>
+    <section>
+      <p class="rlabel">Filter</p>
+      <div class="tiers">
+        <button class="fchip on" data-tier="all"><i></i>All<b>159</b></button>
+        <button class="fchip t1" data-tier="1"><i></i>Conservative<b>19</b></button>
+        <button class="fchip t2" data-tier="2"><i></i>Balanced<b>75</b></button>
+        <button class="fchip t3" data-tier="3"><i></i>Aggressive<b>145</b></button>
+        <button class="fchip t0" data-tier="0"><i></i>Locked<b>14</b></button>
+      </div>
+    </section>
+    <section class="ctl">
+      <select id="cat" aria-label="Category">
         <option value="all">All categories</option>
         <option value="Samsung">Samsung (114)</option>
         <option value="Google">Google (20)</option>
@@ -160,44 +268,45 @@
       </select>
       <label class="switch"><input type="checkbox" id="restOnly"> restorable only</label>
       <label class="switch"><input type="checkbox" id="showGone"> show removed</label>
-      <div class="spacer"></div>
-      <button class="mini" id="selVisible">Select visible</button>
-      <button class="mini" id="clear">Clear</button>
-    </div>
-  </div>
-</header>
-
-<main class="wrap" id="list"></main>
+      <div class="rbtns">
+        <button class="mini" id="selVisible">Select visible</button>
+        <button class="mini" id="clear">Clear</button>
+      </div>
+    </section>
+  </aside>
+  <main id="list"></main>
+</div>
 
 <footer>
-  <div class="progress"><i id="prog"></i></div>
-  <div class="wrap fbar">
-    <div class="stat"><b id="selCount">0</b> selected</div>
-    <div class="stat"><b id="restCount">0</b> restorable</div>
-    <div class="stat"><b id="storeCount">0</b> need Play Store</div>
-    <div class="stat" id="opStatus"></div>
+  <i class="prog" id="prog"></i>
+  <div class="dock">
+    <div class="dcount"><b id="selCount">0</b><span>selected</span></div>
+    <div class="dstats">
+      <span><b id="restCount">0</b> restorable with install-existing</span>
+      <span><b id="storeCount">0</b> need a Play Store reinstall<span id="opStatus"></span></span>
+    </div>
     <div class="spacer"></div>
-    <button class="btn ghost" id="undo" disabled>Undo</button>
+    <button class="btn" id="undo" disabled>Undo</button>
     <button class="btn" id="export" disabled>Export</button>
-    <button class="btn primary" id="apply" disabled>Apply to phone</button>
+    <button class="btn apply" id="apply" disabled>Apply to phone</button>
   </div>
 </footer>
 
 <dialog id="confirm">
-  <div class="dhead"><h2>Apply to phone</h2><button class="btn ghost" id="cCancel">Cancel</button></div>
+  <div class="dhead"><h2 id="cTitle">Apply to phone</h2><button class="mini" id="cCancel">Cancel</button></div>
   <div class="dbody" id="cBody"></div>
-  <div class="dbar"><button class="btn ghost" id="cCancel2">Cancel</button><button class="btn primary" id="cGo">Remove now</button></div>
+  <div class="dbar"><button class="btn" id="cCancel2">Cancel</button><button class="btn apply" id="cGo">Remove now</button></div>
 </dialog>
 
 <dialog id="dlg">
-  <div class="dhead"><h2 id="dtitle">Export</h2><button class="btn ghost" id="close">Close</button></div>
+  <div class="dhead"><h2 id="dtitle">Export</h2><button class="mini" id="close">Close</button></div>
   <div class="tabs">
     <button class="on" data-tab="list">list_app.txt</button>
     <button data-tab="rm">debloat.sh</button>
     <button data-tab="rv">revert.sh</button>
   </div>
   <pre id="out"></pre>
-  <div class="dbar"><span class="stat" id="dnote"></span><button class="btn" id="copy">Copy</button><button class="btn" id="download">Download</button></div>
+  <div class="dbar"><span class="stat" id="dnote" style="margin-right:auto;color:var(--mut);font-size:11.5px"></span><button class="btn" id="copy">Copy</button><button class="btn" id="download">Download</button></div>
 </dialog>
 
 <div class="toast" id="toast"></div>
@@ -205,11 +314,11 @@
 <script>
 const DATA = [{"p":"com.samsung.android.app.camera.sticker.facearavatar.preload","l":1,"n":"Camera AR Stickers","d":"Preloaded face and AR stickers for the camera.","c":"Samsung","r":1},{"p":"com.sec.android.app.chromecustomizations","l":1,"n":"Chrome Customizations","d":"Samsung customizations layer for Chrome.","c":"Samsung","r":1},{"p":"com.samsung.android.knox.analytics.uploader","l":1,"n":"Knox Analytics","d":"Uploads Knox usage analytics.","c":"Samsung","r":1},{"p":"com.samsung.safetyinformation","l":1,"n":"Safety Information","d":"Regulatory and safety information screens.","c":"Samsung","r":1},{"p":"com.samsung.android.aircommandmanager","l":2,"n":"Air Command","d":"S Pen Air Command menu. Remove if you do not use the S Pen.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.agent","l":2,"n":"Bixby","d":"Bixby voice assistant.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.ondevice.enus","l":2,"n":"Bixby On-device English","d":"On-device Bixby English model. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.bixbyvision.framework","l":2,"n":"Bixby Vision","d":"Camera-based visual search.","c":"Samsung","r":1},{"p":"com.samsung.android.bixby.wakeup","l":2,"n":"Bixby Wakeup","d":"Always-listening \"Hi Bixby\" trigger.","c":"Samsung","r":1},{"p":"com.sec.android.sdhms","l":2,"n":"Device Health Manager","d":"Battery and device-care service (SDHMS).","c":"Samsung","r":1},{"p":"com.samsung.android.app.clipboardedge","l":2,"n":"Edge Clipboard","d":"Edge panel clipboard. Removing breaks clipboard history there.","c":"Samsung","r":1},{"p":"com.samsung.android.app.taskedge","l":2,"n":"Edge Tasks","d":"Tasks panel in the Edge panels.","c":"Samsung","r":1},{"p":"com.samsung.android.app.watchmanagerstub","l":2,"n":"Galaxy Wearable Stub","d":"Installs and links the Galaxy Wearable app for watches.","c":"Samsung","r":1},{"p":"com.samsung.android.game.gamehome","l":2,"n":"Game Launcher","d":"Game Launcher. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.game.gos","l":2,"n":"Game Optimizing Service","d":"Throttles games for thermals. Removing can raise FPS and heat.","c":"Samsung","r":1},{"p":"com.samsung.android.game.gametools","l":2,"n":"Game Tools","d":"In-game overlay (FPS, block calls).","c":"Samsung","r":1},{"p":"com.samsung.android.intellivoiceservice","l":2,"n":"Intelligent Voice Service","d":"Voice service behind Bixby and call features.","c":"Samsung","r":1},{"p":"com.samsung.android.app.interpreter","l":2,"n":"Interpreter","d":"Galaxy AI live interpreter.","c":"Samsung","r":1},{"p":"com.samsung.android.mdx.kit","l":2,"n":"MDX Kit","d":"Component of Multi Device Experience.","c":"Samsung","r":1},{"p":"com.samsung.android.allshare.service.mediashare","l":2,"n":"Media Share","d":"DLNA sharing of media to TVs.","c":"Samsung","r":1},{"p":"com.samsung.android.app.routines","l":2,"n":"Modes and Routines","d":"Context automation of settings. Removing breaks routines.","c":"Samsung","r":1},{"p":"com.samsung.android.mdx","l":2,"n":"Multi Device Experience","d":"Cross-device continuity features.","c":"Samsung","r":1},{"p":"com.samsung.android.setting.multisound","l":2,"n":"Multi Sound","d":"Play audio to two outputs at the same time.","c":"Samsung","r":1},{"p":"com.sec.android.easyonehand","l":2,"n":"One-handed Mode","d":"Shrinks the interface for one-handed use.","c":"Samsung","r":1},{"p":"com.samsung.android.service.peoplestripe","l":2,"n":"People Edge","d":"People panel in the Edge panels.","c":"Samsung","r":1},{"p":"com.sec.android.mimage.photoretouching","l":2,"n":"Photo Retouching","d":"Object eraser and retouch inside Gallery.","c":"Samsung","r":1},{"p":"com.samsung.android.app.sharelive","l":2,"n":"Quick Share","d":"Quick Share / Nearby sharing. Removing breaks file sharing.","c":"Samsung","r":1},{"p":"com.samsung.android.app.reminder","l":2,"n":"Reminder","d":"Samsung Reminder (to-dos, time reminders).","c":"Samsung","r":1},{"p":"com.samsung.android.hwresourceshare.storage","l":2,"n":"Resource Share","d":"Shares phone resources with tablets and PCs (Multi Control).","c":"Samsung","r":1},{"p":"com.samsung.android.scloud","l":2,"n":"Samsung Cloud","d":"Samsung Cloud backup and sync.","c":"Samsung","r":1},{"p":"com.samsung.android.spayfw","l":2,"n":"Samsung Pay Framework","d":"Backend for Samsung Wallet. Google Wallet does not need it.","c":"Samsung","r":1},{"p":"com.samsung.SMT","l":2,"n":"Samsung TTS","d":"Samsung text-to-speech engine. Remove if you use Google TTS.","c":"Samsung","r":1},{"p":"com.samsung.android.smartsuggestions","l":2,"n":"Smart Suggestions","d":"Suggests apps and actions on the home screen and in Settings.","c":"Samsung","r":1},{"p":"com.sec.android.easyMover","l":2,"n":"Smart Switch","d":"Smart Switch transfer app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.smartmirroring","l":2,"n":"Smart View","d":"Screen mirroring to TVs.","c":"Samsung","r":1},{"p":"com.samsung.android.oneconnect","l":2,"n":"SmartThings","d":"SmartThings hub app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.service.stplatform","l":2,"n":"SmartThings Platform","d":"Background platform for SmartThings.","c":"Samsung","r":1},{"p":"com.sec.android.app.soundalive","l":2,"n":"SoundAlive","d":"Audio effects for headphones and speakers.","c":"Samsung","r":1},{"p":"com.samsung.storyservice","l":2,"n":"Story Service","d":"Gallery auto-albums (\"stories\").","c":"Samsung","r":1},{"p":"com.samsung.android.themecenter","l":2,"n":"Theme Center","d":"Themes, icon packs and wallpapers from Galaxy Store.","c":"Samsung","r":1},{"p":"com.sec.android.app.vepreload","l":2,"n":"Video Editor","d":"Built-in video editor.","c":"Samsung","r":1},{"p":"com.samsung.app.newtrim","l":2,"n":"Video Trimmer","d":"Trims videos in Gallery.","c":"Samsung","r":1},{"p":"com.samsung.android.visionintelligence","l":2,"n":"Vision Intelligence","d":"Galaxy AI image recognition backend.","c":"Samsung","r":1},{"p":"com.samsung.android.net.wifi.wifiguider","l":2,"n":"Wi-Fi Guider","d":"Wi-Fi quality pop-ups and guidance.","c":"Samsung","r":1},{"p":"com.samsung.aasaservice","l":3,"n":"AASA Service","d":"Samsung account/auth background service. Unverified effect \u2014 test before keeping it removed.","c":"Samsung","r":1},{"p":"com.sec.automation","l":3,"n":"Automation","d":"Engine behind Routines automation.","c":"Samsung","r":1},{"p":"com.samsung.android.aware.service","l":3,"n":"Aware Service","d":"Samsung context and awareness service. Low impact.","c":"Samsung","r":1},{"p":"com.samsung.android.beaconmanager","l":3,"n":"Beacon Manager","d":"Bluetooth beacon scanning for SmartThings.","c":"Samsung","r":1},{"p":"com.samsung.android.bbc.bbcagent","l":3,"n":"Bug Report Agent","d":"Collects bug reports for Samsung Members.","c":"Samsung","r":1},{"p":"com.sec.android.app.popupcalculator","l":3,"n":"Calculator","d":"Stock calculator. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.globalpostprocmgr","l":3,"n":"Camera Post-Processing","d":"Global camera post-processing coordinator. Can affect photo quality.","c":"Samsung","r":1},{"p":"com.sec.android.app.clockpackage","l":3,"n":"Clock","d":"Alarm, timer, stopwatch and world clock. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.scpm","l":3,"n":"Config Policy Manager","d":"Remote configuration and policy manager. Check connectivity after removal.","c":"Samsung","r":1},{"p":"com.samsung.android.dbsc","l":3,"n":"DBSC","d":"Samsung data collection service. Low impact.","c":"Samsung","r":1},{"p":"com.samsung.android.da.daagent","l":3,"n":"Device Agent","d":"Samsung device agent for diagnostics and analytics.","c":"Samsung","r":1},{"p":"com.samsung.android.carkey","l":3,"n":"Digital Car Key","d":"UWB/NFC car key feature.","c":"Samsung","r":1},{"p":"com.samsung.android.dkey","l":3,"n":"Digital Key Framework","d":"Framework behind digital keys.","c":"Samsung","r":1},{"p":"com.sec.android.widgetapp.easymodecontactswidget","l":3,"n":"Easy Mode Contacts","d":"Contacts widget used only by Easy mode.","c":"Samsung","r":1},{"p":"com.samsung.android.easysetup","l":3,"n":"Easy Setup","d":"Quick setup transfer helper. Safe after setup.","c":"Samsung","r":1},{"p":"com.sec.android.emergencylauncher","l":3,"n":"Emergency Launcher","d":"Emergency mode home screen and SOS. Remove with care.","c":"Samsung","r":1},{"p":"com.samsung.faceservice","l":3,"n":"Face Service","d":"Face recognition for unlock and accounts. Keep if you use face unlock.","c":"Samsung","r":1},{"p":"com.sem.factoryapp","l":3,"n":"Factory App","d":"Factory test app.","c":"Samsung","r":1},{"p":"com.sec.android.app.factorykeystring","l":3,"n":"Factory Key String","d":"Factory test app.","c":"Samsung","r":1},{"p":"com.samsung.android.fmm","l":3,"n":"Find My Mobile","d":"Remote locate, lock and wipe. Removing loses that safety net.","c":"Samsung","r":1},{"p":"com.samsung.android.forest","l":3,"n":"Forest","d":"Unclear Samsung preload. Test before keeping it removed.","c":"Samsung","r":1},{"p":"com.samsung.android.gru","l":3,"n":"GRU","d":"Samsung background utility, function unclear. Test.","c":"Samsung","r":1},{"p":"com.sec.hearingadjust","l":3,"n":"Hearing Adjust","d":"Hearing-aid and hearing adjustment settings.","c":"Samsung","r":1},{"p":"com.samsung.ipservice","l":3,"n":"IP Service","d":"Internet and telephony helper service.","c":"Samsung","r":1},{"p":"com.samsung.android.ipsgeofence","l":3,"n":"IPS Geofence","d":"Indoor positioning geofences.","c":"Samsung","r":1},{"p":"com.samsung.android.knox.zt.framework","l":3,"n":"Knox Zero Trust","d":"Enterprise security framework. Remove only if not employer-managed.","c":"Samsung","r":1},{"p":"com.samsung.android.liveeffectservice","l":3,"n":"Live Effect","d":"Live video wallpaper effects.","c":"Samsung","r":1},{"p":"com.sec.android.app.magnifier","l":3,"n":"Magnifier","d":"Accessibility magnifier.","c":"Samsung","r":1},{"p":"com.samsung.android.mapsagent","l":3,"n":"Map Agent","d":"Background agent for Samsung map and location features.","c":"Samsung","r":1},{"p":"com.samsung.android.mdecservice","l":3,"n":"MDEC Service","d":"Media decode and render helper.","c":"Samsung","r":1},{"p":"com.samsung.android.mobileservice","l":3,"n":"Mobile Service","d":"Samsung account sync backend.","c":"Samsung","r":1},{"p":"com.sec.android.app.myfiles","l":3,"n":"My Files","d":"File manager. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.sdk.ocr","l":3,"n":"OCR SDK","d":"Text recognition SDK used by Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.android.app.parentalcare","l":3,"n":"Parental Care","d":"Parental control helper for Samsung Kids.","c":"Samsung","r":1},{"p":"com.sec.android.app.personalization","l":3,"n":"Personalization","d":"Personalization service for Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.petservice","l":3,"n":"Pet Service","d":"Pet wallpaper and lock-screen feature.","c":"Samsung","r":1},{"p":"com.sec.android.app.quicktool","l":3,"n":"Quick Tool","d":"Quick tools panel helper.","c":"Samsung","r":1},{"p":"com.sec.android.RilServiceModeApp","l":3,"n":"RIL Service Mode","d":"Radio diagnostics menu.","c":"Samsung","r":1},{"p":"com.samsung.android.authfw","l":3,"n":"Samsung Auth Framework","d":"Auth framework behind Samsung Pass and account.","c":"Samsung","r":1},{"p":"com.samsung.android.calendar","l":3,"n":"Samsung Calendar","d":"Samsung Calendar app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.email.provider","l":3,"n":"Samsung Email","d":"Samsung Email app. Not restorable.","c":"Samsung","r":0},{"p":"com.samsung.android.kidsinstaller","l":3,"n":"Samsung Kids","d":"Installs Samsung Kids. Remove if unused.","c":"Samsung","r":1},{"p":"com.samsung.android.mdm","l":3,"n":"Samsung MDM","d":"Mobile device management client. Remove if not enrolled by an employer.","c":"Samsung","r":1},{"p":"com.samsung.android.messaging","l":3,"n":"Samsung Messages","d":"Stock SMS app. Remove only if Google Messages is your default.","c":"Samsung","r":1},{"p":"com.samsung.android.app.notes","l":3,"n":"Samsung Notes","d":"Notes app. Not restorable \u2014 needs Galaxy Store.","c":"Samsung","r":0},{"p":"com.samsung.android.samsungpass","l":3,"n":"Samsung Pass","d":"Samsung password manager and passkeys.","c":"Samsung","r":1},{"p":"com.samsung.android.samsungpassautofill","l":3,"n":"Samsung Pass Autofill","d":"Autofill provider for Samsung Pass.","c":"Samsung","r":1},{"p":"com.sec.spp.push","l":3,"n":"Samsung Push Service","d":"Push channel for Samsung apps and notifications.","c":"Samsung","r":0},{"p":"com.samsung.knox.securefolder","l":3,"n":"Secure Folder","d":"Encrypted private workspace. Remove only if you never use it.","c":"Samsung","r":1},{"p":"com.samsung.android.app.sketchbook","l":3,"n":"Sketchbook","d":"Sketching add-on for Samsung Notes / PENUP.","c":"Samsung","r":1},{"p":"com.skms.android.agent","l":3,"n":"SKMS Agent","d":"MDM/Knox management agent. Remove if not employer-managed.","c":"Samsung","r":1},{"p":"com.sec.android.easyMover.Agent","l":3,"n":"Smart Switch Agent","d":"Smart Switch background agent.","c":"Samsung","r":1},{"p":"com.samsung.android.smartswitchassistant","l":3,"n":"Smart Switch Assistant","d":"Phone-to-phone transfer helper.","c":"Samsung","r":1},{"p":"com.samsung.android.app.soundpicker","l":3,"n":"Sound Picker","d":"Picks sounds for notifications and alarms. Test alerts after removal.","c":"Samsung","r":1},{"p":"com.samsung.android.stickercenter","l":3,"n":"Sticker Center","d":"Stickers for the camera and AR.","c":"Samsung","r":1},{"p":"com.sec.sve","l":3,"n":"SVE","d":"Samsung video enhancement service. Unverified effect.","c":"Samsung","r":1},{"p":"com.samsung.android.service.tagservice","l":3,"n":"Tag Service","d":"NFC tag service framework.","c":"Samsung","r":1},{"p":"com.samsung.android.app.updatecenter","l":3,"n":"Update Center","d":"Updates preloaded Samsung apps.","c":"Samsung","r":1},{"p":"com.samsung.android.vtcamerasettings","l":3,"n":"Video Call Camera","d":"Camera settings for third-party video calls. Can break Meet or Zoom camera.","c":"Samsung","r":1},{"p":"com.sec.android.app.ve.vebgm","l":3,"n":"Video Editor Music","d":"Background music library for the video editor.","c":"Samsung","r":1},{"p":"com.samsung.android.visual.cloudcore","l":3,"n":"Visual Cloud Core","d":"Cloud processing for visual features.","c":"Samsung","r":1},{"p":"com.sec.android.app.voicenote","l":3,"n":"Voice Recorder","d":"Voice recorder app. Not restorable.","c":"Samsung","r":0},{"p":"com.sec.android.app.wlantest","l":3,"n":"WLAN Test","d":"Wi-Fi diagnostic test app.","c":"Samsung","r":1},{"p":"com.samsung.sec.android.application.csc","l":0,"n":"CSC","d":"Region and carrier configuration. Removing can break mobile data, VoLTE and OTA updates.","c":"Samsung","r":1},{"p":"com.samsung.android.ese","l":0,"n":"eSE Secure Element","d":"Embedded secure element used by Samsung Wallet and keys. Removing breaks tap-to-pay.","c":"Samsung","r":1},{"p":"com.samsung.android.app.omcagent","l":0,"n":"OMC Agent","d":"Carrier and region (CSC) configuration agent. Tied to mobile data and APN setup.","c":"Samsung","r":1},{"p":"com.sec.android.app.safetyassurance","l":0,"n":"Safety Assurance","d":"Emergency and SOS safety service.","c":"Samsung","r":1},{"p":"com.osp.app.signin","l":0,"n":"Samsung Account","d":"Samsung account sign-in. Breaks Galaxy Store, Find My, Samsung Cloud, backups.","c":"Samsung","r":0},{"p":"com.sec.android.app.billing","l":0,"n":"Samsung Billing","d":"In-app purchases for Galaxy Store. Removing breaks paid apps.","c":"Samsung","r":1},{"p":"com.sec.android.app.SecSetupWizard","l":0,"n":"Setup Wizard","d":"First-boot setup flow. Do not remove.","c":"Samsung","r":1},{"p":"com.google.mainline.telemetry","l":1,"n":"Mainline Telemetry","d":"Sends system-module usage stats to Google.","c":"Google","r":0},{"p":"com.google.android.onetimeinitializer","l":1,"n":"One-time Initializer","d":"Runs once during first boot. Safe after setup.","c":"Google","r":1},{"p":"com.google.android.printservice.recommendation","l":1,"n":"Print Recommendations","d":"Suggests print services. Safe.","c":"Google","r":1},{"p":"com.google.android.apps.aiwallpapers","l":2,"n":"AI Wallpapers","d":"Generative wallpaper feature in One UI 8.","c":"Google","r":1},{"p":"com.google.android.projection.gearhead","l":2,"n":"Android Auto","d":"In-car phone projection. Not restorable.","c":"Google","r":0},{"p":"com.android.chrome","l":2,"n":"Chrome","d":"Google Chrome. Not restorable \u2014 needs Play Store reinstall.","c":"Google","r":0},{"p":"com.google.android.apps.tachyon","l":2,"n":"Google Meet","d":"Video calls. Not restorable.","c":"Google","r":0},{"p":"com.google.android.apps.photos","l":2,"n":"Google Photos","d":"Photos app and cloud backup. Removing stops backup. Not restorable.","c":"Google","r":0},{"p":"com.google.android.apps.restore","l":2,"n":"Google Restore","d":"Restores data from an old phone during setup. Not restorable.","c":"Google","r":0},{"p":"com.google.android.healthconnect.controller","l":2,"n":"Health Connect","d":"Health data hub UI. Remove if you do not sync health apps. Installed as an APEX module \u2014 it may come back after a reboot.","c":"Google","r":1},{"p":"com.google.android.apps.books","l":2,"n":"Play Books","d":"Google Play Books reader. Not restorable.","c":"Google","r":0},{"p":"com.google.android.youtube","l":2,"n":"YouTube","d":"YouTube app.","c":"Google","r":1},{"p":"com.google.ar.core","l":3,"n":"ARCore","d":"AR engine used by AR apps and games. Not restorable.","c":"Google","r":0},{"p":"com.google.android.gms.supervision","l":3,"n":"Family Link","d":"Parental supervision component. Remove only if you do not use Family Link.","c":"Google","r":1},{"p":"com.google.audio.hearing.visualization.accessibility.scribe","l":3,"n":"Live Transcribe","d":"Accessibility transcription. Keep if needed.","c":"Google","r":1},{"p":"com.google.android.apps.accessibility.voiceaccess","l":3,"n":"Voice Access","d":"Accessibility control by voice. Keep if needed.","c":"Google","r":0},{"p":"com.google.android.googlequicksearchbox","l":0,"n":"Google App","d":"Search, Discover feed, Assistant voice trigger, Gemini entry point. Removing breaks home-screen search.","c":"Google","r":0},{"p":"com.google.android.syncadapters.calendar","l":0,"n":"Google Calendar Sync","d":"Sync adapter for Google Calendar. Removing stops Google calendars.","c":"Google","r":1},{"p":"com.google.android.partnersetup","l":0,"n":"Partner Setup","d":"Google partner configuration for region and carrier. Some apps misbehave without it.","c":"Google","r":0},{"p":"com.google.android.safetycenter.resources","l":0,"n":"Safety Center Assets","d":"Strings and assets for Android Safety Center (emergency info, SOS). Installed as an APEX module \u2014 it may come back after a reboot.","c":"Google","r":1},{"p":"com.android.bookmarkprovider","l":1,"n":"Bookmark Provider","d":"Stores stock-browser bookmarks. Safe if you never use that browser.","c":"Android","r":1},{"p":"com.android.wallpaper.livepicker","l":1,"n":"Live Wallpaper Picker","d":"Picker for live wallpapers. Safe with static wallpapers.","c":"Android","r":1},{"p":"com.android.role.notes.enabled","l":1,"n":"Notes Role Config","d":"Configuration for the system notes role.","c":"Android","r":1},{"p":"com.android.providers.partnerbookmarks","l":1,"n":"Partner Bookmarks","d":"Carrier bookmarks preloaded into the browser.","c":"Android","r":1},{"p":"com.android.dreams.basic","l":1,"n":"Screensaver","d":"Daydream screensaver, only used while docked or charging.","c":"Android","r":1},{"p":"com.android.internal.display.cutout.emulation.waterfall","l":1,"n":"Waterfall Cutout Emulator","d":"Developer option that fakes a waterfall display cutout.","c":"Android","r":1},{"p":"com.android.bips","l":2,"n":"Built-in Print","d":"Built-in printer discovery and printing. Remove only if you never print.","c":"Android","r":1},{"p":"com.android.apps.tag","l":2,"n":"NFC Tag","d":"AOSP reader/writer for NFC tags. Safe unless you write tags with it.","c":"Android","r":1},{"p":"com.android.printspooler","l":2,"n":"Print Spooler","d":"Print queue behind the print dialog.","c":"Android","r":1},{"p":"com.android.settings.intelligence","l":2,"n":"Settings Search","d":"Search index and suggestions inside Settings. Settings still works.","c":"Android","r":1},{"p":"com.android.stk","l":2,"n":"SIM Toolkit","d":"Carrier SIM menus (top-up, service codes).","c":"Android","r":1},{"p":"com.android.providers.userdictionary","l":2,"n":"User Dictionary","d":"Stores your custom keyboard words. Removing loses them.","c":"Android","r":1},{"p":"com.android.wallpapercropper","l":2,"n":"Wallpaper Cropper","d":"Crop screen for \"set wallpaper\". Removing breaks that flow.","c":"Android","r":1},{"p":"com.android.backupconfirm","l":3,"n":"Backup Confirm","d":"One-time dialog for adb backup. Safe to remove.","c":"Android","r":1},{"p":"com.monotype.android.font.foundation","l":3,"n":"Monotype Fonts","d":"Extra Monotype font pack. Removing may affect font selection.","c":"Android","r":1},{"p":"com.android.sharedstoragebackup","l":3,"n":"Shared Storage Backup","d":"Legacy adb-backup helper for shared storage.","c":"Android","r":1},{"p":"com.android.providers.calendar","l":0,"n":"Calendar Storage","d":"Stores every calendar event. Removing hides all calendars.","c":"Android","r":1},{"p":"com.monotype.android.font.samsungone","l":0,"n":"SamsungOne Font","d":"The system default font.","c":"Android","r":1},{"p":"com.touchtype.swiftkey","l":0,"n":"SwiftKey Keyboard","d":"Keyboard app. If it is your active keyboard, removing it leaves none.","c":"Android","r":0},{"p":"com.amazon.kindle","l":1,"n":"Kindle","d":"Preinstalled Amazon Kindle reader. Not restorable \u2014 needs Play Store reinstall.","c":"Preloads","r":0},{"p":"com.microsoft.appmanager","l":1,"n":"Link to Windows","d":"Bridge for Windows Phone Link. Remove if unused.","c":"Preloads","r":1},{"p":"com.linkedin.android","l":1,"n":"LinkedIn","d":"Preinstalled LinkedIn. Not restorable.","c":"Preloads","r":0},{"p":"com.microsoft.skydrive","l":1,"n":"OneDrive","d":"Preinstalled OneDrive.","c":"Preloads","r":1},{"p":"com.spotify.music","l":1,"n":"Spotify","d":"Preinstalled Spotify. Not restorable.","c":"Preloads","r":0},{"p":"com.tripadvisor.tripadvisor","l":1,"n":"Tripadvisor","d":"Preinstalled Tripadvisor. Not restorable.","c":"Preloads","r":0}];
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
-const LEVEL = {1:"Conservative",2:"Balanced",3:"Aggressive",0:"Locked"};
+const LEVEL = {0:"Locked",1:"Conservative",2:"Balanced",3:"Aggressive"};
 const S = {sel:new Set(), status:new Map(), tier:"all", cat:"all", q:"", restOnly:false,
            showGone:false, installed:null, bridge:null, busy:false, lastRemoved:new Set()};
 const $ = s => document.querySelector(s);
-const esc = s => s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const pkg = p => DATA.find(d => d.p === p);
 
 function visible(){
@@ -222,23 +331,19 @@ function visible(){
     return true;
   });
 }
-
 function badge(d){
   const st = S.status.get(d.p);
-  if (!st) return '<span class="st"></span>';
-  return '<span class="st show ' + st + '">' + (st === "working" ? "…" : st) + '</span>';
+  return st ? '<span class="st show ' + st + '">' + (st === "working" ? "working" : st) + '</span>' : '';
 }
-
 function render(){
   const list = $("#list"), rows = visible();
   list.innerHTML = "";
-  const cats = [...new Set(rows.map(d => d.c))];
-  if (!rows.length) { list.innerHTML = '<p style="color:var(--muted);padding:24px 4px">No package matches these filters.</p>'; }
-  for (const c of cats) {
+  if (!rows.length) list.innerHTML = '<p class="empty">Nothing matches these filters.</p>';
+  for (const c of [...new Set(rows.map(d => d.c))]) {
     const items = rows.filter(d => d.c === c);
     const g = document.createElement("section");
     g.className = "group";
-    g.innerHTML = '<h2 class="ghead">' + c + ' <span>' + items.length + '</span></h2>';
+    g.innerHTML = '<h2 class="ghead"><b>' + c + '</b><span>' + items.length + '</span></h2>';
     list.appendChild(g);
     for (const d of items) {
       const st = S.status.get(d.p);
@@ -248,12 +353,13 @@ function render(){
       row.dataset.row = d.p;
       const disabled = d.l === 0 || gone || S.busy ? "disabled" : "";
       row.innerHTML =
-        '<input type="checkbox" ' + (S.sel.has(d.p) ? "checked" : "") + ' ' + disabled + ' data-pkg="' + d.p + '">' +
-        '<div><div class="name">' + esc(d.n) + '</div><div class="pkg">' + esc(d.p) + '</div>' +
-        '<div class="desc">' + esc(d.d) + (gone && st !== "removed" ? ' <span class="warn">(not installed)</span>' : '') + '</div></div>' +
-        '<div class="tags">' + badge(d) +
-          '<span class="tag t' + d.l + '">' + LEVEL[d.l] + '</span>' +
-          (d.l === 0 ? '<span class="tag t0">🔒 keep</span>' : '') +
+        '<input type="checkbox" ' + (S.sel.has(d.p) ? "checked" : "") + " " + disabled + ' data-pkg="' + d.p + '">' +
+        '<div><div class="line1"><span class="nm">' + esc(d.n) + '</span>' +
+          (d.l === 0 ? '<span class="tier t0"><i></i>locked</span>' : '') + '</div>' +
+        '<div class="pk">' + esc(d.p) + '</div>' +
+        '<div class="desc">' + esc(d.d) + (gone && st !== "removed" ? ' <span class="warn">(already removed)</span>' : '') + '</div></div>' +
+        '<div class="side">' + badge(d) +
+          '<span class="tier t' + d.l + '"><i></i>' + LEVEL[d.l] + '</span>' +
           (d.r ? '' : '<span class="store">store</span>') +
         '</div>';
       g.appendChild(row);
@@ -261,15 +367,14 @@ function render(){
   }
   updateUI();
 }
-
 function paintRow(p){
   const el = document.querySelector('[data-row="' + p + '"]');
   if (!el) return;
-  el.querySelector(".st").outerHTML = badge(pkg(p));
-  const st = S.status.get(p);
-  if (st === "removed") { el.classList.add("done"); const cb = el.querySelector("input"); cb.checked = false; cb.disabled = true; }
+  const old = el.querySelector(".st");
+  if (old) old.outerHTML = badge(pkg(p));
+  else if (S.status.get(p)) el.querySelector(".side").insertAdjacentHTML("afterbegin", badge(pkg(p)));
+  if (S.status.get(p) === "removed") { el.classList.add("done"); const cb = el.querySelector("input"); if (cb) { cb.checked = false; cb.disabled = true; } }
 }
-
 function updateUI(){
   const sel = DATA.filter(d => S.sel.has(d.p));
   $("#selCount").textContent = sel.length;
@@ -280,29 +385,23 @@ function updateUI(){
   $("#undo").disabled = S.busy || !S.lastRemoved.size;
   $("#undo").textContent = S.lastRemoved.size ? "Undo " + S.lastRemoved.size : "Undo";
   $("#apply").textContent = S.busy ? "Working…" : "Apply to phone";
-  $("#opStatus").textContent = S.busy ? "don't unplug the phone" : "";
+  $("#opStatus").textContent = S.busy ? " · don't unplug the phone" : "";
 }
-
 function setProgress(done, total){
   $("#prog").style.width = total ? (100 * done / total) + "%" : "0";
-  if (total) $("#opStatus").textContent = done + " / " + total;
+  if (total) $("#opStatus").textContent = " · " + done + " / " + total;
 }
-
 function toast(msg){
   const t = $("#toast"); t.textContent = msg; t.classList.add("show");
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2600);
 }
-
 async function post(action, packages){
   try {
-    const r = await fetch("apply?t=" + encodeURIComponent(TOKEN), {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({action, packages})
-    });
+    const r = await fetch("apply?t=" + encodeURIComponent(TOKEN), {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({action, packages})});
     return await r.json();
   } catch (e) { return null; }
 }
-
 async function applySet(pkgs, action){
   S.busy = true; updateUI();
   let ok = 0;
@@ -324,39 +423,33 @@ async function applySet(pkgs, action){
     paintRow(p); setProgress(i + 1, pkgs.length);
   }
   S.busy = false; setProgress(0, 0); updateUI();
-  toast((action === "remove" ? "Removed " : "Restored ") + ok + " of " + pkgs.length + " packages");
+  toast((action === "remove" ? "Removed " : "Restored ") + ok + " of " + pkgs.length);
   render();
 }
-
 function confirmApply(){
   const sel = DATA.filter(d => S.sel.has(d.p));
-  const store = sel.filter(d => !d.r);
-  const crit = sel.filter(d => d.l === 3);
+  const store = sel.filter(d => !d.r), crit = sel.filter(d => d.l === 3);
   $("#cBody").innerHTML =
     "<p><b>" + sel.length + " packages</b> will be removed for the current user on <b>" +
-      esc(S.bridge && S.bridge.device ? (S.bridge.device.model + " · " + S.bridge.device.serial) : "the phone") +
-      "</b>. Nothing is deleted from the system partition, so Undo can bring it back.</p>" +
-    "<ul><li>" + sel.filter(d => d.r).length + " can be restored with install-existing</li>" +
+    esc(S.bridge && S.bridge.device ? S.bridge.device.model + " · " + S.bridge.device.serial : "the phone") +
+    "</b>. The system partition keeps every APK, so Undo can restore them.</p><ul>" +
+    "<li>" + sel.filter(d => d.r).length + " restorable with install-existing</li>" +
     (store.length ? "<li class='warn'>" + store.length + " need a Play Store reinstall: " +
       store.slice(0, 6).map(d => esc(d.n)).join(", ") + (store.length > 6 ? "…" : "") + "</li>" : "") +
-    (crit.length ? "<li class='warn'>" + crit.length + " deep cuts (Clock, Files, AI…) — test camera, calls, alarms after</li>" : "") +
+    (crit.length ? "<li class='warn'>" + crit.length + " deep cuts — check alarms, camera and calls afterwards</li>" : "") +
     "</ul>";
   $("#confirm").showModal();
 }
-
 $("#cGo").addEventListener("click", () => {
   const list = DATA.filter(d => S.sel.has(d.p)).map(d => d.p);
   $("#confirm").close();
   if (list.length) applySet(list, "remove");
 });
-["cCancel", "cCancel2"].forEach(id => $("#" + id).addEventListener("click", () => $("#confirm").close()));
+["cCancel","cCancel2"].forEach(id => $("#" + id).addEventListener("click", () => $("#confirm").close()));
 $("#apply").addEventListener("click", confirmApply);
 $("#undo").addEventListener("click", () => { const l = [...S.lastRemoved]; if (l.length) applySet(l, "restore"); });
 $("#clear").addEventListener("click", () => { S.sel.clear(); document.querySelectorAll(".presets button").forEach(b => b.classList.remove("on")); render(); });
-$("#selVisible").addEventListener("click", () => {
-  visible().forEach(d => { if (d.l !== 0 && !(S.installed && !S.installed.has(d.p))) S.sel.add(d.p); });
-  render();
-});
+$("#selVisible").addEventListener("click", () => { visible().forEach(d => { if (d.l !== 0 && !(S.installed && !S.installed.has(d.p))) S.sel.add(d.p); }); render(); });
 $("#q").addEventListener("input", e => { S.q = e.target.value.trim().toLowerCase(); render(); });
 $("#cat").addEventListener("change", e => { S.cat = e.target.value; render(); });
 $("#restOnly").addEventListener("change", e => { S.restOnly = e.target.checked; render(); });
@@ -375,20 +468,16 @@ $("#list").addEventListener("change", e => {
 });
 function preset(level){
   S.sel.clear();
-  DATA.forEach(d => {
-    if (d.l > 0 && d.l <= level && !(S.installed && !S.installed.has(d.p))) S.sel.add(d.p);
-  });
+  DATA.forEach(d => { if (d.l > 0 && d.l <= level && !(S.installed && !S.installed.has(d.p))) S.sel.add(d.p); });
   document.querySelectorAll(".presets button").forEach(b => b.classList.toggle("on", +b.dataset.level === level));
   render();
 }
 document.querySelectorAll(".presets button").forEach(b => b.addEventListener("click", () => preset(+b.dataset.level)));
 
-/* ---- export ---- */
 function selected(){ return DATA.filter(d => S.sel.has(d.p)); }
 function listText(){
   const s = selected();
-  return "# " + s.length + " packages — generated " + "2026-10-21" + "\n" +
-         s.map(d => d.p).join("\n") + "\n";
+  return "# " + s.length + " packages — generated 2026-10-21\n" + s.map(d => d.p).join("\n") + "\n";
 }
 function removeText(){
   const s = selected();
@@ -405,7 +494,7 @@ function revertText(){
   "[ -z \"${DEV:-}\" ] && { echo \"No authorised device.\"; exit 1; }\n" +
   s.map(d => "adb -s \"$DEV\" shell cmd package install-existing " + d.p).join("\n") + "\n";
 }
-const TABS = {list:{f:listText,file:"list_app.txt",note:"next to debloat.sh"},
+const TABS = {list:{f:listText,file:"list_app.txt",note:"save next to debloat.sh"},
               rm:{f:removeText,file:"debloat.sh",note:"chmod +x debloat.sh"},
               rv:{f:revertText,file:"revert.sh",note:"chmod +x revert.sh"}};
 let tab = "list";
@@ -423,18 +512,17 @@ $("#download").addEventListener("click", () => {
   a.download = TABS[tab].file; a.click(); URL.revokeObjectURL(a.href);
 });
 
-/* ---- bridge ---- */
 let probing = false;
 const BANNER = {
-  file: "Bridge offline — this page can only export files. Start it with <code>python3 web/server.py</code> and open the URL it prints.",
+  file: "Bridge offline — start <code>python3 web/server.py</code> and open the URL it prints.",
   offline: "Bridge unreachable — start <code>python3 web/server.py</code>, then press Retry.",
-  stale: "The bridge restarted and issued a new token. Reopen the URL printed in its terminal.",
-  nodevice: "Bridge is up but no phone is authorised. Connect the USB cable and accept the debugging prompt, then press Retry."
+  stale: "The bridge restarted with a new token. Reopen the URL printed in its terminal.",
+  nodevice: "Bridge is up, but no phone is authorised. Plug the cable, accept the prompt, press Retry."
 };
 async function probe(manual){
   if (probing) return;
   probing = true;
-  if (manual) { const c = $("#chipBridge"); c.className = "chip"; c.textContent = "bridge: checking…"; }
+  if (manual) { const c = $("#chipBridge"); c.className = "chip"; c.textContent = "checking bridge"; }
   $("#reconnect").disabled = true;
   if (location.protocol === "file:") { S.bridge = null; paintBridge("file"); probing = false; $("#reconnect").disabled = false; return; }
   try {
@@ -443,10 +531,7 @@ async function probe(manual){
     else if (!h.device || !h.device.connected) { S.bridge = h; paintBridge("nodevice"); }
     else {
       S.bridge = h;
-      try {
-        const i = await (await fetch("installed", {cache:"no-store"})).json();
-        if (i && i.packages) S.installed = new Set(i.packages);
-      } catch (e) {}
+      try { const i = await (await fetch("installed", {cache:"no-store"})).json(); if (i && i.packages) S.installed = new Set(i.packages); } catch (e) {}
       paintBridge();
     }
   } catch (e) { S.bridge = null; paintBridge("offline"); }
@@ -457,13 +542,13 @@ function paintBridge(reason){
   if (S.bridge && S.bridge.ok && S.bridge.device && S.bridge.device.connected) {
     const d = S.bridge.device;
     chip.className = "chip ok";
-    chip.innerHTML = "bridge ready" + (S.bridge.dry_run ? " · <b>dry run</b>" : "") + " · <b>" + esc(d.model) + "</b>";
-    $("#chipDevice").innerHTML = "<b>" + esc(d.model) + "</b> · adb <b>" + esc(d.serial || "") + "</b>";
-    $("#chipAndroid").innerHTML = "Android <b>" + esc(d.android || "?") + "</b> · sdk <b>" + esc(d.sdk || "?") + "</b>";
+    chip.innerHTML = "bridge ready" + (S.bridge.dry_run ? " · dry run" : "") + " · " + esc(d.model);
+    $("#chipDevice").innerHTML = "<b>" + esc(d.model) + "</b> · adb " + esc(d.serial || "");
+    $("#chipAndroid").innerHTML = "Android <b>" + esc(d.android || "?") + "</b> · sdk " + esc(d.sdk || "?");
     banner.classList.remove("show");
   } else {
     chip.className = "chip bad";
-    chip.textContent = reason === "stale" ? "token expired" : reason === "nodevice" ? "bridge ready · no phone" : "bridge offline";
+    chip.textContent = reason === "stale" ? "token expired" : reason === "nodevice" ? "no phone" : "bridge offline";
     $("#bannerText").innerHTML = BANNER[reason] || BANNER.offline;
     banner.classList.add("show");
   }
