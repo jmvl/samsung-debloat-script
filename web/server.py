@@ -148,7 +148,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"ok": True, "count": len(pkgs), "packages": pkgs})
             return
         if u.path == "/health":
-            self.send_json({"ok": True, "token_expected": True, "dry_run": ARGS.dry_run, "device": device_info()})
+            tok = parse_qs(u.query).get("t", [""])[0]
+            self.send_json({"ok": True, "token_ok": tok == TOKEN, "dry_run": ARGS.dry_run,
+                            "device": device_info()})
             return
         self.send_json({"ok": False, "error": "not found"}, 404)
 

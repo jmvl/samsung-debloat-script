@@ -126,13 +126,15 @@
       <h1>Samsung Debloat <span>— package picker</span></h1>
       <div class="meta">
         <span class="chip" id="chipBridge">bridge: checking…</span>
+        <button class="mini" id="reconnect" title="Check the bridge again without reloading">Reconnect</button>
         <span class="chip" id="chipDevice"><b>SM-S911B</b> Galaxy S23</span>
-        <span class="chip">Android <b>16</b> · One UI <b>8</b></span>
+        <span class="chip" id="chipAndroid">Android <b>16</b> · One UI <b>8</b></span>
         <span class="chip"><b>159</b> packages</span>
       </div>
       <div class="banner" id="banner">
-        Bridge offline — this page can only export files. Start it with
-        <code>python3 web/server.py</code> and open the URL it prints.
+        <span id="bannerText">Bridge offline — this page can only export files. Start it with
+        <code>python3 web/server.py</code> and open the URL it prints.</span>
+        <button class="mini" id="retry" style="margin-left:10px">Retry</button>
       </div>
     </div>
     <div class="toolbar">
@@ -273,7 +275,7 @@ function updateUI(){
   $("#selCount").textContent = sel.length;
   $("#restCount").textContent = sel.filter(d => d.r).length;
   $("#storeCount").textContent = sel.filter(d => !d.r).length;
-  $("#apply").disabled = !S.bridge || S.busy || !sel.length;
+  $("#apply").disabled = !(S.bridge && S.bridge.ok && S.bridge.device && S.bridge.device.connected) || S.busy || !sel.length;
   $("#export").disabled = S.busy || !sel.length;
   $("#undo").disabled = S.busy || !S.lastRemoved.size;
   $("#undo").textContent = S.lastRemoved.size ? "Undo " + S.lastRemoved.size : "Undo";
@@ -422,35 +424,53 @@ $("#download").addEventListener("click", () => {
 });
 
 /* ---- bridge ---- */
-async function probe(){
-  if (location.protocol === "file:") { S.bridge = null; paintBridge(); return; }
+let probing = false;
+const BANNER = {
+  file: "Bridge offline — this page can only export files. Start it with <code>python3 web/server.py</code> and open the URL it prints.",
+  offline: "Bridge unreachable — start <code>python3 web/server.py</code>, then press Retry.",
+  stale: "The bridge restarted and issued a new token. Reopen the URL printed in its terminal.",
+  nodevice: "Bridge is up but no phone is authorised. Connect the USB cable and accept the debugging prompt, then press Retry."
+};
+async function probe(manual){
+  if (probing) return;
+  probing = true;
+  if (manual) { const c = $("#chipBridge"); c.className = "chip"; c.textContent = "bridge: checking…"; }
+  $("#reconnect").disabled = true;
+  if (location.protocol === "file:") { S.bridge = null; paintBridge("file"); probing = false; $("#reconnect").disabled = false; return; }
   try {
-    const h = await (await fetch("health", {cache:"no-store"})).json();
-    S.bridge = h;
-    try {
-      const i = await (await fetch("installed", {cache:"no-store"})).json();
-      if (i && i.packages) S.installed = new Set(i.packages);
-    } catch (e) {}
-  } catch (e) { S.bridge = null; }
-  paintBridge();
-  render();
+    const h = await (await fetch("health?t=" + encodeURIComponent(TOKEN), {cache:"no-store"})).json();
+    if (h.token_ok === false) { S.bridge = null; paintBridge("stale"); }
+    else if (!h.device || !h.device.connected) { S.bridge = h; paintBridge("nodevice"); }
+    else {
+      S.bridge = h;
+      try {
+        const i = await (await fetch("installed", {cache:"no-store"})).json();
+        if (i && i.packages) S.installed = new Set(i.packages);
+      } catch (e) {}
+      paintBridge();
+    }
+  } catch (e) { S.bridge = null; paintBridge("offline"); }
+  probing = false; $("#reconnect").disabled = false; render();
 }
-function paintBridge(){
+function paintBridge(reason){
   const chip = $("#chipBridge"), banner = $("#banner");
-  if (S.bridge && S.bridge.ok) {
-    const d = S.bridge.device || {};
+  if (S.bridge && S.bridge.ok && S.bridge.device && S.bridge.device.connected) {
+    const d = S.bridge.device;
     chip.className = "chip ok";
-    chip.innerHTML = "bridge ready" + (S.bridge.dry_run ? " · <b>dry run</b>" : "") +
-      (d.model ? " · <b>" + esc(d.model) + "</b>" : "");
-    if (d.model) $("#chipDevice").innerHTML = "<b>" + esc(d.model) + "</b> · adb <b>" + esc(d.serial || "") + "</b>";
+    chip.innerHTML = "bridge ready" + (S.bridge.dry_run ? " · <b>dry run</b>" : "") + " · <b>" + esc(d.model) + "</b>";
+    $("#chipDevice").innerHTML = "<b>" + esc(d.model) + "</b> · adb <b>" + esc(d.serial || "") + "</b>";
+    $("#chipAndroid").innerHTML = "Android <b>" + esc(d.android || "?") + "</b> · sdk <b>" + esc(d.sdk || "?") + "</b>";
     banner.classList.remove("show");
   } else {
     chip.className = "chip bad";
-    chip.textContent = "bridge offline";
+    chip.textContent = reason === "stale" ? "token expired" : reason === "nodevice" ? "bridge ready · no phone" : "bridge offline";
+    $("#bannerText").innerHTML = BANNER[reason] || BANNER.offline;
     banner.classList.add("show");
   }
   updateUI();
 }
+$("#reconnect").addEventListener("click", () => probe(true));
+$("#retry").addEventListener("click", () => probe(true));
 probe().then(() => { if (!S.sel.size) preset(2); else render(); });
 </script>
 </body>

@@ -110,6 +110,7 @@ The picker can apply changes to the phone. A browser cannot call `adb`, so a sma
 3. Pick a preset or tick packages. Press **Apply to phone**.
 
 - The bridge listens on 127.0.0.1 only. Every change request needs the token printed at startup.
+- Press **Reconnect** to re-check the bridge without a reload. The page also warns when the bridge restarted and the token is stale, or when no phone is authorised.
 - The bridge refuses 20 protected packages: CSC, eSE, Setup Wizard, Samsung Account, Google Wallet, NFC, Play services and others.
 - It shows which packages are already removed on the connected phone.
 - **Undo** restores the packages you removed in the last run. Every change is per-user (`pm uninstall -k --user 0`).
