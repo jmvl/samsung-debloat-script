@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-if [ "$(id -u)" != "0" ] && ! id -Gn | grep -qw 'adbusers'; then
+# macOS has no adbusers group and needs no udev rules: skip the sudo escalation on Darwin.
+if [ "$(uname)" != "Darwin" ] && [ "$(id -u)" != "0" ] && ! id -Gn | grep -qw 'adbusers'; then
     echo "This script requires root privileges or membership in the 'adbusers' group to access USB devices."
     echo "Attempting to re-run with sudo..."
     exec sudo "$0" "$@"
