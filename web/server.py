@@ -12,6 +12,7 @@ Only listens on 127.0.0.1. Every POST needs the token printed at startup.
 
 import argparse
 import json
+import os
 import re
 import secrets
 import shutil
@@ -23,7 +24,25 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 WEB = Path(__file__).resolve().parent
-TOKEN = secrets.token_urlsafe(18)
+TOKEN_FILE = WEB / ".token"
+
+
+def load_token():
+    """Keep one token across restarts so an open tab stays valid."""
+    env = os.environ.get("DEBLOAT_TOKEN", "").strip()
+    if env:
+        return env
+    if TOKEN_FILE.exists():
+        saved = TOKEN_FILE.read_text().strip()
+        if saved:
+            return saved
+    fresh = secrets.token_urlsafe(18)
+    TOKEN_FILE.write_text(fresh)
+    TOKEN_FILE.chmod(0o600)
+    return fresh
+
+
+TOKEN = load_token()
 MAX_PACKAGES = 200
 PKG = re.compile(r"^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)+$")
 
@@ -138,6 +157,12 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         if u.path in ("/", "/index.html"):
+            if parse_qs(u.query).get("t", [""])[0] != TOKEN:
+                self.send_response(302)
+                self.send_header("Location", "/?t=" + TOKEN)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
             page = (WEB / "index.html").read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")

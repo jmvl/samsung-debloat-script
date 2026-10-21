@@ -597,7 +597,9 @@ async function probe(manual){
   } catch (e) { S.bridge = null; paintBridge("offline"); }
   probing = false; $("#reconnect").disabled = false; render();
 }
+let bridgeReason = null;
 function paintBridge(reason){
+  bridgeReason = reason || null;
   const chip = $("#chipBridge"), banner = $("#banner");
   if (S.bridge && S.bridge.ok && S.bridge.device && S.bridge.device.connected) {
     const d = S.bridge.device;
@@ -615,7 +617,10 @@ function paintBridge(reason){
   updateUI();
 }
 $("#reconnect").addEventListener("click", () => probe(true));
-$("#retry").addEventListener("click", () => probe(true));
+$("#retry").addEventListener("click", () => {
+  if (bridgeReason === "stale") { location.replace("/"); return; }
+  probe(true);
+});
 probe().then(() => { if (!S.sel.size) preset(2); else render(); });
 </script>
 </body>
